@@ -3185,11 +3185,12 @@ function exportCSV(){
     'Resultado','Lotaje','Link','Notas'
   ];
 
+  const SEP = ';'; // punto y coma para compatibilidad con Excel en español
+
   const escape = v => {
     if(v === null || v === undefined) return '';
     const s = String(v).replace(/"/g, '""');
-    // Si tiene comas, comillas o saltos de línea, envolver en comillas
-    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? `"${s}"` : s;
+    return (s.includes(SEP) || s.includes('"') || s.includes('\n')) ? `"${s}"` : s;
   };
 
   const rows = trades.map(t => {
@@ -3234,10 +3235,11 @@ function exportCSV(){
       t.lotaje || '',
       t.link || '',
       (t.notas || '').replace(/\n/g, ' ')
-    ].map(escape).join(',');
+    ].map(escape).join(SEP);
   });
 
-  const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n'); // \uFEFF = BOM para que Excel lo abra bien en UTF-8
+  // 'sep=;' en la primera línea le indica a Excel qué separador usar
+  const csvContent = '\uFEFF' + 'sep=;\n' + [headers.join(SEP), ...rows].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3255,11 +3257,15 @@ function importCSV(input){
   reader.onload = e => {
     try {
       const text = e.target.result.replace(/^\uFEFF/,''); // quitar BOM si existe
-      const lines = text.split('\n').map(l=>l.trimEnd()).filter(l=>l.length);
+      const allLines = text.split('\n').map(l=>l.trimEnd()).filter(l=>l.length);
+      // Saltar la línea "sep=;" si existe (la ponemos nosotros para Excel)
+      const lines = allLines[0].startsWith('sep=') ? allLines.slice(1) : allLines;
       if(lines.length < 2){ alert('El archivo CSV está vacío o no tiene datos.'); return; }
+      // Detectar separador automáticamente (;  o  ,)
+      const SEP = lines[0].includes(';') ? ';' : ',';
 
       // Parsear headers (primera línea)
-      const headers = parseCSVLine(lines[0]).map(h=>h.trim().toLowerCase()
+      const headers = parseCSVLine(lines[0], SEP).map(h=>h.trim().toLowerCase()
         .replace(/ /g,'_').replace(/\//g,'_').replace(/\./g,'').replace(/ó/g,'o')
         .replace(/é/g,'e').replace(/á/g,'a').replace(/í/g,'i').replace(/ú/g,'u')
         .replace(/ñ/g,'n'));
@@ -3311,7 +3317,7 @@ function importCSV(input){
       const imported = [];
       const skipped = [];
       for(let i = 1; i < lines.length; i++){
-        const vals = parseCSVLine(lines[i]);
+        const vals = parseCSVLine(lines[i], SEP);
         if(!vals.length || vals.every(v=>!v)) continue;
         const obj = { id: Date.now() + i, accountId: activeAccountId };
         let cuentaNombre = '';
@@ -3370,18 +3376,18 @@ function importCSV(input){
   input.value = '';
 }
 
-// Parser de línea CSV que respeta comillas y comas dentro de campos
-function parseCSVLine(line){
+// Parser de línea CSV que respeta comillas y el separador indicado
+function parseCSVLine(line, sep=','){
   const result = [];
   let cur = '';
   let inQuotes = false;
   for(let i = 0; i < line.length; i++){
     const ch = line[i];
     if(ch === '"'){
-      if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; } // comilla escapada ""
+      if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; }
       else inQuotes = !inQuotes;
-    } else if(ch === ',' && !inQuotes){
-      result.push(cur); cur = '';
+    } else if(line.slice(i, i+sep.length) === sep && !inQuotes){
+      result.push(cur); cur = ''; i += sep.length - 1;
     } else {
       cur += ch;
     }
