@@ -342,9 +342,7 @@ tbody tr:hover td{background:var(--bg2)}
     <button class="export-btn" onclick="exportData()" title="Descargar respaldo de tus datos">↓ Exportar respaldo .json</button>
     <button class="export-btn" onclick="exportCSV()" title="Exportar trades a CSV para Excel / Sheets" style="color:var(--green);border-color:var(--green2)">↓ Exportar trades .csv</button>
     <button class="export-btn" onclick="document.getElementById('imp-file').click()" title="Cargar respaldo desde otra PC">↑ Importar respaldo .json</button>
-    <button class="export-btn" onclick="document.getElementById('imp-csv-file').click()" title="Importar trades desde CSV" style="color:var(--green);border-color:var(--green2)">↑ Importar trades .csv</button>
     <input type="file" id="imp-file" accept="application/json" style="display:none" onchange="importData(this)">
-    <input type="file" id="imp-csv-file" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)">
   </div>
 </div>
 
@@ -1011,7 +1009,7 @@ tbody tr:hover td{background:var(--bg2)}
 <!-- AYUDA · Cómo usar la app -->
 <div id="page-ayuda" class="page">
   <div class="page-title">Ayuda · Cómo usar</div>
-  <div class="page-sub">Guía rápida de cada funcionalidad · datos · patrones · decisiones</div>
+  <div class="page-sub">Guía completa de cada funcionalidad · datos · patrones · decisiones</div>
 
   <div class="help-toc">
     <a href="#h-instalar">01 · Cómo instalar</a>
@@ -1021,35 +1019,22 @@ tbody tr:hover td{background:var(--bg2)}
     <a href="#h-stats">05 · Estadísticas</a>
     <a href="#h-cartera">06 · Cartera</a>
     <a href="#h-asr">07 · ASR · Auto-Self Review</a>
-    <a href="#h-respaldos">08 · Respaldos</a>
+    <a href="#h-respaldos">08 · Respaldos y exportación</a>
   </div>
 
   <!-- 01 INSTALAR -->
   <div class="help-section" id="h-instalar">
     <div class="help-tag">01 · Empezar</div>
     <h3 class="help-h3">Cómo instalar como app</h3>
-    <p class="help-p">La aplicación funciona desde un link y puede instalarse como app real con su propio ícono e independencia del navegador.</p>
-
-    <div class="help-step">
-      <div class="help-step-num">📱</div>
-      <div><strong>iPhone / iPad (Safari)</strong><p class="help-p">Abrir el link en Safari · botón Compartir · "Agregar a pantalla de inicio".</p></div>
-    </div>
-    <div class="help-step">
-      <div class="help-step-num">🤖</div>
-      <div><strong>Android (Chrome)</strong><p class="help-p">Aviso automático "Agregar a pantalla de inicio" o menú de tres puntos · "Instalar app".</p></div>
-    </div>
-    <div class="help-step">
-      <div class="help-step-num">💻</div>
-      <div><strong>Mac (Safari · macOS Sonoma 14+)</strong><p class="help-p">Menú Archivo · Agregar al Dock. Queda como app independiente.</p></div>
-    </div>
-    <div class="help-step">
-      <div class="help-step-num">🖥️</div>
-      <div><strong>Windows o Mac (Chrome / Edge)</strong><p class="help-p">Ícono de instalación a la derecha de la barra de direcciones · clic e instalar.</p></div>
-    </div>
-
+    <p class="help-p">La aplicación funciona desde un link y puede instalarse como app real con su propio ícono e independencia del navegador. En la barra lateral aparece automáticamente el botón <strong>📱 Instalar app</strong> cuando el navegador lo permite.</p>
+    <div class="help-step"><div class="help-step-num">📱</div><div><strong>iPhone / iPad (Safari)</strong><p class="help-p">Abrir el link en Safari · botón Compartir · "Agregar a pantalla de inicio".</p></div></div>
+    <div class="help-step"><div class="help-step-num">🤖</div><div><strong>Android (Chrome)</strong><p class="help-p">Aviso automático "Agregar a pantalla de inicio" o menú de tres puntos · "Instalar app".</p></div></div>
+    <div class="help-step"><div class="help-step-num">💻</div><div><strong>Mac (Safari · macOS Sonoma 14+)</strong><p class="help-p">Menú Archivo · Agregar al Dock. Queda como app independiente.</p></div></div>
+    <div class="help-step"><div class="help-step-num">🖥️</div><div><strong>Windows o Mac (Chrome / Edge)</strong><p class="help-p">Ícono de instalación a la derecha de la barra de direcciones · clic e instalar.</p></div></div>
     <div class="help-callout warn">
       <div class="help-callout-label">Importante</div>
       <p class="help-p">Cada forma de abrir la app (link, app instalada, archivo HTML local) guarda los datos por separado. Conviene elegir <strong>una forma como principal</strong>.</p>
+      <p class="help-p">En móvil la barra lateral se oculta por defecto. Tocar el botón <strong>☰</strong> (arriba a la izquierda) para abrirla y navegar entre pestañas.</p>
     </div>
   </div>
 
@@ -1060,13 +1045,13 @@ tbody tr:hover td{background:var(--bg2)}
     <p class="help-p">100% local. Toda la información se guarda en el almacenamiento del navegador del propio dispositivo (localStorage). No hay servidor, ni nube, ni cuentas compartidas.</p>
     <ul class="help-list">
       <li><strong>Privacidad total:</strong> nadie tiene acceso a los trades de otros, ni siquiera quien comparte la app.</li>
-      <li><strong>Sin internet:</strong> una vez instalada, funciona offline.</li>
+      <li><strong>Sin internet:</strong> una vez cargada, funciona sin conexión durante la sesión.</li>
       <li><strong>Sin costos:</strong> no hay suscripciones ni inicio de sesión.</li>
-      <li><strong>Respaldo manual:</strong> exportar a JSON cuando se quiera para backup o transferir a otro dispositivo.</li>
+      <li><strong>Respaldo manual:</strong> exportar a JSON o CSV cuando se quiera.</li>
     </ul>
     <div class="help-callout danger">
       <div class="help-callout-label">Atención</div>
-      <p class="help-p">Si se borran las cookies o el almacenamiento del navegador, los datos se pierden. Exportar respaldos periódicamente.</p>
+      <p class="help-p">Si se borran las cookies o el almacenamiento del navegador, los datos se pierden. Exportar respaldos periódicamente desde la barra lateral.</p>
     </div>
   </div>
 
@@ -1074,13 +1059,13 @@ tbody tr:hover td{background:var(--bg2)}
   <div class="help-section" id="h-registro">
     <div class="help-tag">03 · Pestaña</div>
     <h3 class="help-h3">Registro · Nueva operación</h3>
-    <p class="help-p">Pantalla principal donde se carga cada operación. Está dividida en bloques visuales para que sea ordenado y rápido de completar.</p>
+    <p class="help-p">Pantalla principal donde se carga cada operación. Dividida en bloques visuales ordenados.</p>
 
     <h4 class="help-h4">Cuenta del trade</h4>
-    <p class="help-p">En la parte superior. Cada trade se asigna a una cuenta (Cuenta principal, fondeada FTMO, demo, etc.). El capital actual de la cuenta seleccionada aparece a la derecha como referencia. Para crear más cuentas, ir a Cartera.</p>
+    <p class="help-p">En la parte superior. Cada trade se asigna a una cuenta (Cuenta principal, fondeada FTMO, demo, etc.). El capital actual de la cuenta seleccionada aparece como referencia. El capital inicial se rellena automáticamente. Para crear más cuentas, ir a Cartera.</p>
 
     <h4 class="help-h4">Estrategia y variantes</h4>
-    <p class="help-p">Seis estrategias disponibles: Blue · Red · Pink · White · Black · Green. La estrategia <em>Blue</em> tiene 3 variantes (A · B · C) que aparecen al seleccionarla.</p>
+    <p class="help-p">Seis estrategias: Blue · Red · Pink · White · Black · Green. La estrategia Blue tiene 3 variantes (A · B · C) que aparecen al seleccionarla.</p>
 
     <h4 class="help-h4">Tipo, dirección, modo y orden</h4>
     <ul class="help-list">
@@ -1094,48 +1079,47 @@ tbody tr:hover td{background:var(--bg2)}
     <h4 class="help-h4">Activo, precios y contexto técnico</h4>
     <ul class="help-list">
       <li><strong>Activo y mercado:</strong> nombre del par y categoría (Forex, Indices, Cripto, etc.).</li>
-      <li><strong>Precios:</strong> entrada · SL · TP · salida real · dónde se colocó cada uno técnicamente.</li>
+      <li><strong>Precios:</strong> entrada · SL · TP · salida real · ubicación técnica de cada uno.</li>
       <li><strong>Sesión de mercado:</strong> Sydney · Tokio · Londres · New York. <strong>Multi-selección</strong> si hay solapamiento.</li>
-      <li><strong>Fibonacci · confirmaciones · patrones:</strong> bloques con pills. Las confirmaciones cambian según el tipo de trading.</li>
+      <li><strong>Fibonacci · confirmaciones · patrones:</strong> las confirmaciones cambian según el tipo de trading.</li>
       <li><strong>Gestión del trade:</strong> short term · long term · parciales · etc. Multi-selección.</li>
     </ul>
 
     <h4 class="help-h4">Gráficos por temporalidad</h4>
-    <p class="help-p">5 slots de imagen, uno por temporalidad. Las temporalidades dependen del tipo de trading:</p>
+    <p class="help-p">5 slots de imagen, uno por temporalidad. Cambian según el tipo de trading:</p>
     <ul class="help-list">
       <li><strong>Day:</strong> Conjunto · Diario · 4h · 1h · Ejecución</li>
       <li><strong>Swing:</strong> Conjunto · Mensual · Semanal · Diario · Ejecución</li>
       <li><strong>Scalp:</strong> Conjunto · 1h · 15min · 5min · Ejecución</li>
     </ul>
-    <p class="help-p">Para cargar: clic en el slot · pegar imagen · arrastrar archivo. Cada slot tiene su propio cuadro de notas independiente.</p>
+    <p class="help-p">Para cargar: clic en el slot · pegar imagen · arrastrar archivo. Cada slot tiene su propio cuadro de notas.</p>
 
-    <h4 class="help-h4">Capital y riesgo · al final</h4>
-    <p class="help-p">Bloque final con el manejo financiero. Algunos campos son manuales y otros automáticos:</p>
+    <h4 class="help-h4">Capital y riesgo · al final del formulario</h4>
     <ul class="help-list">
-      <li><strong>Capital inicial:</strong> manual · auto-rellenado del trade anterior.</li>
-      <li><strong>RR Inicial %:</strong> manual.</li>
+      <li><strong>Capital inicial:</strong> manual · se autorellena con el capital actual de la cuenta.</li>
+      <li><strong>RR Inicial %:</strong> manual · lo planeado antes de entrar.</li>
       <li><strong>Riesgo $:</strong> manual.</li>
-      <li><strong>Riesgo %:</strong> auto · = Riesgo $ ÷ Capital.</li>
-      <li><strong>B/P Bruto $:</strong> manual · usar signo − para pérdidas.</li>
-      <li><strong>RR Final %:</strong> auto · = B/P Bruto ÷ Riesgo $.</li>
+      <li><strong>Riesgo %:</strong> automático · = Riesgo $ ÷ Capital.</li>
+      <li><strong>B/P Bruto $:</strong> manual · usar − para pérdidas.</li>
+      <li><strong>RR Final %:</strong> automático · = B/P Bruto ÷ Riesgo $.</li>
       <li><strong>Comisiones $:</strong> manual.</li>
-      <li><strong>B/P Neto $:</strong> auto · = Bruto − Comisiones.</li>
-      <li><strong>Capital final:</strong> auto · = Capital + Neto.</li>
+      <li><strong>B/P Neto $:</strong> automático · = Bruto − Comisiones.</li>
+      <li><strong>Capital final:</strong> automático · = Capital + Neto.</li>
+      <li><strong>Resultado:</strong> TP · SL · BE · Abierto.</li>
     </ul>
-    <p class="help-p">Al final, seleccionar el resultado (TP · SL · BE · Abierto) y guardar.</p>
   </div>
 
   <!-- 04 HISTORIAL -->
   <div class="help-section" id="h-historial">
     <div class="help-tag">04 · Pestaña</div>
     <h3 class="help-h3">Historial</h3>
-    <p class="help-p">Tabla con todas las operaciones cargadas. Permite filtrar, editar y eliminar.</p>
+    <p class="help-p">Tabla con todas las operaciones cargadas. Cada fila muestra la cuenta a la que pertenece el trade con un <strong>badge de color único</strong> por cuenta, para diferenciarlas visualmente de un vistazo.</p>
     <ul class="help-list">
-      <li><strong>Filtros:</strong> estrategia · resultado · tipo · dirección · mercado · sesión · modo (Operado/Backtest).</li>
-      <li><strong>Vista compacta:</strong> cada fila muestra fecha · hora · modo · estrategia · activo · sesión · dirección · orden · gestión · fibonacci · patrón · lotaje · R:R · P&L · resultado · gráfico · notas.</li>
+      <li><strong>Filtros:</strong> cuenta · estrategia · resultado · tipo · dirección · mercado · sesión · modo (Operado/Backtest).</li>
+      <li><strong>Columna Cuenta:</strong> badge coloreado que identifica a qué cuenta pertenece cada trade. Cada cuenta tiene un color fijo asignado automáticamente.</li>
       <li><strong>Editar:</strong> botón con ícono de lápiz · carga el trade en el formulario para modificar.</li>
       <li><strong>Eliminar:</strong> botón con cruz · pide confirmación.</li>
-      <li><strong>Ver gráficos:</strong> clic en la miniatura abre el visor a pantalla completa con navegación entre las capturas.</li>
+      <li><strong>Ver gráficos:</strong> clic en la miniatura abre el visor a pantalla completa con navegación entre capturas y sus notas.</li>
     </ul>
   </div>
 
@@ -1149,18 +1133,13 @@ tbody tr:hover td{background:var(--bg2)}
     <p class="help-p">Todos los filtros se aplican en simultáneo a todas las métricas y gráficos.</p>
     <ul class="help-list">
       <li><strong>Cuenta · modo · estilo · estrategia · dirección · sesión · mercado.</strong></li>
-      <li><strong>Período (fechas):</strong> rango personalizado o presets (Este mes · Mes pasado · Últimos 30d · Últimos 90d · Este año · Todo).</li>
+      <li><strong>Período (fechas):</strong> rango personalizado o presets rápidos: Este mes · Mes pasado · Últimos 30d · Últimos 90d · Este año · Todo.</li>
     </ul>
-    <p class="help-p">Permite comparar, por ejemplo, cómo cambió el rendimiento por sesión entre abril y mayo.</p>
+    <p class="help-p">Permite comparar, por ejemplo, cómo cambió el rendimiento por sesión entre abril y mayo, o comparar Long vs Short.</p>
 
-    <h4 class="help-h4">KPIs principales</h4>
-    <p class="help-p">Total operaciones · Win rate (excl. BE) · Wins/Losses/BE · RR promedio · Operaciones abiertas.</p>
-
-    <h4 class="help-h4">Métricas avanzadas</h4>
+    <h4 class="help-h4">KPIs principales y métricas avanzadas</h4>
     <ul class="help-list">
-      <li><strong>RR medio</strong> · promedio del R:R de todos los trades.</li>
-      <li><strong>Winrate (excl. BE)</strong> · porcentaje de ganadoras sin contar break-even.</li>
-      <li><strong>Beneficio total</strong> · suma de B/P Neto.</li>
+      <li><strong>RR medio · Winrate (excl. BE) · Beneficio total · Número de trades.</strong></li>
       <li><strong>AVG Win · AVG Loss</strong> · R promedio de ganadoras y perdedoras.</li>
       <li><strong>Expectancy</strong> · esperanza matemática del sistema. Positivo = rentable.</li>
       <li><strong>Profit Factor</strong> · ganancias / pérdidas. Mayor a 1 = rentable.</li>
@@ -1170,9 +1149,10 @@ tbody tr:hover td{background:var(--bg2)}
     <h4 class="help-h4">Gráficos</h4>
     <ul class="help-list">
       <li>Win rate por <strong>estrategia · estilo · sesión · fibonacci.</strong></li>
-      <li><strong>Matriz combinada estrategia × estilo × sesión:</strong> tabla con WR coloreado en cada celda. Verde = bueno · amarillo = neutro · rojo = malo.</li>
+      <li><strong>Win rate por dirección · Long vs Short:</strong> con conteo de trades y P&L total por dirección.</li>
+      <li><strong>Matriz combinada estrategia × estilo × sesión:</strong> tabla con WR coloreado en cada celda. Verde &gt;60% · amarillo 40-60% · rojo &lt;40%.</li>
       <li><strong>Confirmaciones y patrones</strong> con tasa de win.</li>
-      <li><strong>Errores principales</strong> (desde ASRs) · cuáles se repiten más y su WR asociado.</li>
+      <li><strong>Errores principales</strong> (desde ASRs) · frecuencia y WR asociado.</li>
       <li><strong>Estado mental</strong> (desde ASRs) · cómo influye en el resultado.</li>
     </ul>
   </div>
@@ -1184,7 +1164,7 @@ tbody tr:hover td{background:var(--bg2)}
     <p class="help-p">Gestión del capital. Cuentas múltiples, ingresos, retiros y curva de equity.</p>
 
     <h4 class="help-h4">Cuentas múltiples</h4>
-    <p class="help-p">Es posible tener varias cuentas separadas (Cuenta principal · FTMO 100k · MFF 50k · demo · etc.). Cada trade se asigna a una cuenta puntual al cargarse.</p>
+    <p class="help-p">Es posible tener varias cuentas separadas (Cuenta principal · FTMO 100k · MFF 50k · demo · etc.). Cada trade se asigna a una cuenta al cargarse. Cada cuenta tiene un color único visible en el Historial y en el ASR.</p>
     <ul class="help-list">
       <li><strong>+ Nueva cuenta:</strong> crea con nombre y capital inicial opcional.</li>
       <li><strong>✎ Renombrar:</strong> cambia el nombre de la cuenta activa.</li>
@@ -1200,13 +1180,10 @@ tbody tr:hover td{background:var(--bg2)}
 
     <h4 class="help-h4">KPIs y curva de equity</h4>
     <p class="help-p">Capital inicial · Capital actual · Ganancia total ($ y %) · Máximo histórico · Max drawdown.</p>
-    <p class="help-p">La curva de equity muestra cada evento con su color:</p>
+    <p class="help-p">Colores de la curva:</p>
     <ul class="help-list">
-      <li><span style="color:var(--green)">●</span> Verde: trade ganador</li>
-      <li><span style="color:var(--red)">●</span> Rojo: trade perdedor</li>
-      <li><span style="color:var(--amber)">●</span> Amarillo: break-even</li>
-      <li><span style="color:var(--purple)">●</span> Morado: ingreso de capital</li>
-      <li><span style="color:var(--pink)">●</span> Rosa: retiro de capital</li>
+      <li><span style="color:var(--green)">●</span> Verde: trade ganador · <span style="color:var(--red)">●</span> Rojo: trade perdedor · <span style="color:var(--amber)">●</span> Amarillo: break-even</li>
+      <li><span style="color:var(--purple)">●</span> Morado: ingreso de capital · <span style="color:var(--pink)">●</span> Rosa: retiro de capital</li>
     </ul>
   </div>
 
@@ -1216,53 +1193,54 @@ tbody tr:hover td{background:var(--bg2)}
     <h3 class="help-h3">ASR · Auto-Self Review</h3>
     <p class="help-p">Revisión profunda de cada trade. No es para llenar siempre · es una herramienta de auto-análisis cuando se quiere reflexionar sobre una operación importante.</p>
 
+    <h4 class="help-h4">Identificación del trade</h4>
+    <p class="help-p">El selector de trades muestra la <strong>cuenta entre corchetes</strong> junto a cada trade para diferenciarlos cuando el mismo instrumento fue operado en varias cuentas. El preview también muestra el badge de color de la cuenta. Los ASRs guardados muestran el badge de la cuenta del trade analizado.</p>
+
     <h4 class="help-h4">Estructura del ASR</h4>
     <ul class="help-list">
-      <li><strong>Selector de trade</strong> del historial al que aplica esta revisión.</li>
+      <li><strong>Selector de trade</strong> del historial al que aplica esta revisión · con cuenta identificada.</li>
       <li><strong>Capturas SS THEM y SS NOW:</strong> contexto antes y después del trade.</li>
       <li><strong>Checklist personal:</strong> respeté · ignoré · sin confirmación · operé en rojo.</li>
-      <li><strong>Error principal:</strong> 15 errores predefinidos (FOMO · Entrada temprana · Sin confirmación · Mala gestión · etc.). Multi-selección.</li>
-      <li><strong>Estado mental:</strong> 16 estados predefinidos (Claro · Disciplinado · FOMO · Ansioso · Impulsivo · etc.). Multi-selección.</li>
+      <li><strong>Error principal:</strong> 15 opciones (FOMO · Entrada temprana · Sin confirmación · Mala gestión · etc.). Multi-selección.</li>
+      <li><strong>Estado mental:</strong> 16 opciones (Claro · Disciplinado · FOMO · Ansioso · Impulsivo · etc.). Multi-selección.</li>
       <li><strong>Gestión durante el trade:</strong> texto + captura opcional.</li>
-      <li><strong>Análisis técnico:</strong> 4 preguntas Sí/Parcial/No (HTF-LTF · Estrategia · SL · TP) con detalle.</li>
+      <li><strong>Análisis técnico:</strong> 4 preguntas Sí/Parcial/No con detalle.</li>
       <li><strong>Emociones:</strong> antes · durante · después.</li>
-      <li><strong>¿Volverías a entrar?</strong> Sí · Tal vez · No.</li>
-      <li><strong>Lecciones:</strong> conclusiones del trade.</li>
+      <li><strong>¿Volverías a entrar?</strong> y <strong>Lecciones.</strong></li>
     </ul>
 
-    <h4 class="help-h4">Para qué sirve</h4>
-    <p class="help-p">Los datos de los ASR alimentan automáticamente las estadísticas. Si en marzo el error principal repetido es "FOMO" y en abril "Entrada temprana", se ve directamente en el gráfico correspondiente.</p>
     <div class="help-callout tip">
       <div class="help-callout-label">Sugerencia de uso</div>
-      <p class="help-p">Reservar el ASR para los trades importantes · los que dejaron una lección · los que se desviaron del plan. Después, en Estadísticas, se ven los patrones acumulados.</p>
+      <p class="help-p">Los errores y estados mentales cargados en los ASRs alimentan automáticamente los gráficos de la pestaña Estadísticas. Cuantos más ASRs se completen, más claros son los patrones.</p>
     </div>
   </div>
 
   <!-- 08 RESPALDOS -->
   <div class="help-section" id="h-respaldos">
-    <div class="help-tag">08 · Mantenimiento</div>
+    <div class="help-tag">08 · Respaldos y exportación</div>
     <h3 class="help-h3">Respaldos · exportar e importar</h3>
-    <p class="help-p">Como los datos viven en el navegador, conviene mantener respaldos periódicos.</p>
+    <p class="help-p">Todos los botones están en la barra lateral inferior. Hay tres opciones:</p>
 
-    <h4 class="help-h4">Exportar</h4>
-    <p class="help-p">En la barra lateral inferior · botón <strong>↓ Exportar respaldo</strong>. Descarga un archivo JSON con todo: trades · ASRs · cuentas · movimientos · nombre.</p>
-    <p class="help-p">Recomendado guardar el JSON en Drive · iCloud · etc., especialmente antes de:</p>
-    <ul class="help-list">
-      <li>Cambiar de navegador o dispositivo.</li>
-      <li>Limpiar caché del navegador.</li>
-      <li>Reinstalar la app.</li>
-    </ul>
+    <h4 class="help-h4">↓ Exportar respaldo .json</h4>
+    <p class="help-p">Descarga un archivo JSON con <strong>todo</strong>: trades · ASRs · cuentas · movimientos · nombre del trader. Usar para hacer backup o transferir a otro dispositivo.</p>
 
-    <h4 class="help-h4">Importar</h4>
-    <p class="help-p">Botón <strong>↑ Importar respaldo</strong> en la misma zona. Si la app está vacía, importa todo. Si ya hay datos, ofrece dos opciones:</p>
+    <h4 class="help-h4">↓ Exportar trades .csv</h4>
+    <p class="help-p">Descarga los trades en formato tabla para abrir en <strong>Excel, Google Sheets o LibreOffice</strong>. El archivo usa <code>;</code> como separador para que Excel en español lo abra directamente con doble clic sin configuración extra. Incluye todas las columnas: cuenta, estrategia, precios, riesgo, R:R, P&L, notas, etc.</p>
+    <div class="help-callout warn">
+      <div class="help-callout-label">Nota sobre el CSV</div>
+      <p class="help-p">El CSV sirve para analizar en Excel o Sheets pero <strong>no reemplaza al respaldo .json</strong>: no incluye imágenes, ASRs ni movimientos de cartera. Para un backup completo, usar siempre el .json.</p>
+    </div>
+
+    <h4 class="help-h4">↑ Importar respaldo .json</h4>
+    <p class="help-p">Carga un archivo JSON exportado previamente. Si la app está vacía, importa todo directamente. Si ya hay datos, ofrece dos opciones:</p>
     <ul class="help-list">
-      <li><strong>Reemplazar todo</strong> con el respaldo (descarta lo actual).</li>
-      <li><strong>Sumar</strong> el respaldo a lo que hay (sin duplicar por ID).</li>
+      <li><strong>Reemplazar todo</strong> con el respaldo.</li>
+      <li><strong>Sumar</strong> el respaldo a lo que hay sin duplicar.</li>
     </ul>
 
     <div class="help-callout tip">
       <div class="help-callout-label">Buena práctica</div>
-      <p class="help-p">Exportar respaldo una vez por semana o cada 10 trades importantes y guardar el JSON en la nube. Toma 5 segundos y evita pérdidas accidentales.</p>
+      <p class="help-p">Exportar respaldo .json una vez por semana o cada 10 trades importantes y guardar el archivo en Drive, iCloud o cualquier nube. Toma 5 segundos y evita pérdidas accidentales.</p>
     </div>
   </div>
 
