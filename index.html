@@ -341,8 +341,10 @@ tbody tr:hover td{background:var(--bg2)}
     <button class="export-btn install-btn" id="install-app-btn" onclick="installApp()" style="display:none;background:var(--accent2);color:var(--accent);border-color:var(--accent)" title="Instalar como app en tu dispositivo">📱 Instalar app</button>
     <button class="export-btn" onclick="exportData()" title="Descargar respaldo de tus datos">↓ Exportar respaldo .json</button>
     <button class="export-btn" onclick="exportCSV()" title="Exportar trades a CSV para Excel / Sheets" style="color:var(--green);border-color:var(--green2)">↓ Exportar trades .csv</button>
-    <button class="export-btn" onclick="document.getElementById('imp-file').click()" title="Cargar respaldo desde otra PC">↑ Importar respaldo</button>
+    <button class="export-btn" onclick="document.getElementById('imp-file').click()" title="Cargar respaldo desde otra PC">↑ Importar respaldo .json</button>
+    <button class="export-btn" onclick="document.getElementById('imp-csv-file').click()" title="Importar trades desde CSV" style="color:var(--green);border-color:var(--green2)">↑ Importar trades .csv</button>
     <input type="file" id="imp-file" accept="application/json" style="display:none" onchange="importData(this)">
+    <input type="file" id="imp-csv-file" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)">
   </div>
 </div>
 
@@ -3244,6 +3246,148 @@ function exportCSV(){
   a.click();
   URL.revokeObjectURL(url);
   showToast('CSV exportado · ' + trades.length + ' trades');
+}
+
+function importCSV(input){
+  const file = input.files[0];
+  if(!file){ return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const text = e.target.result.replace(/^\uFEFF/,''); // quitar BOM si existe
+      const lines = text.split('\n').map(l=>l.trimEnd()).filter(l=>l.length);
+      if(lines.length < 2){ alert('El archivo CSV está vacío o no tiene datos.'); return; }
+
+      // Parsear headers (primera línea)
+      const headers = parseCSVLine(lines[0]).map(h=>h.trim().toLowerCase()
+        .replace(/ /g,'_').replace(/\//g,'_').replace(/\./g,'').replace(/ó/g,'o')
+        .replace(/é/g,'e').replace(/á/g,'a').replace(/í/g,'i').replace(/ú/g,'u')
+        .replace(/ñ/g,'n'));
+
+      // Mapa de columnas → campo del trade
+      const colMap = {
+        'id': 'id',
+        'fecha': 'fecha',
+        'hora': 'hora',
+        'fecha_salida': 'fechaSalida',
+        'hora_salida': 'horaSalida',
+        'duracion': 'duracion',
+        'cuenta': '_cuenta_name', // especial: buscar cuenta por nombre
+        'modo': 'mode',
+        'estrategia': 'estrategia',
+        'variante': 'variante',
+        'tipo': 'tipo',
+        'direccion': 'dir',
+        'orden': 'orden',
+        'activo': 'activo',
+        'mercado': 'mercado',
+        'sesion': 'sesion',
+        'entrada': 'entrada',
+        'sl': 'sl',
+        'tp': 'tp',
+        'salida': 'salida',
+        'sl_tecnico': 'slTecnico',
+        'tp_tecnico': 'tpTecnico',
+        'fibonacci': 'fibonacci',
+        'confirmaciones': 'confirmaciones',
+        'patron': 'patron',
+        'gestion': 'gestion',
+        'capital_inicial': 'capital',
+        'capital_final': 'capitalFinal',
+        'riesgo_$': 'riesgoMonto',
+        'riesgo_%': 'riesgoPct',
+        'rr_inicial': 'rrPlan',
+        'rr_final': 'rr',
+        'b_p_bruto': 'bpBruto',
+        'comisiones': 'comisiones',
+        'b_p_neto': 'pnl',
+        'resultado': 'resultado',
+        'lotaje': 'lotaje',
+        'link': 'link',
+        'notas': 'notas'
+      };
+
+      // Parsear filas
+      const imported = [];
+      const skipped = [];
+      for(let i = 1; i < lines.length; i++){
+        const vals = parseCSVLine(lines[i]);
+        if(!vals.length || vals.every(v=>!v)) continue;
+        const obj = { id: Date.now() + i, accountId: activeAccountId };
+        let cuentaNombre = '';
+        headers.forEach((h, idx) => {
+          const field = colMap[h];
+          const val = (vals[idx] || '').trim();
+          if(!field) return;
+          if(field === '_cuenta_name'){ cuentaNombre = val; return; }
+          if(field === 'id' && val){ obj.id = isNaN(Number(val)) ? obj.id : Number(val); return; }
+          obj[field] = val;
+        });
+        // Resolver cuenta por nombre
+        if(cuentaNombre){
+          const acc = accounts.find(a=>a.name.toLowerCase()===cuentaNombre.toLowerCase());
+          if(acc) obj.accountId = acc.id;
+        }
+        // Validación mínima: necesita al menos activo o fecha
+        if(!obj.activo && !obj.fecha){ skipped.push(i+1); continue; }
+        imported.push(obj);
+      }
+
+      if(!imported.length){ alert('No se encontraron trades válidos en el CSV.\n\nAsegurate de que el CSV tenga las columnas correctas (el mismo formato que usa la app al exportar).'); return; }
+
+      const isEmpty = trades.length === 0;
+      let action;
+      if(isEmpty){
+        action = 'merge';
+      } else {
+        const choice = confirm(
+          `Trades actuales: ${trades.length}\nTrades en CSV: ${imported.length}\n\n` +
+          `ACEPTAR = Reemplazar todos los trades con los del CSV\n` +
+          `CANCELAR = Sumar los trades del CSV a los actuales`
+        );
+        action = choice ? 'replace' : 'merge';
+      }
+
+      if(action === 'replace'){
+        trades = imported;
+      } else {
+        const existingIds = new Set(trades.map(t=>t.id));
+        const newTrades = imported.filter(t=>!existingIds.has(t.id));
+        trades = [...newTrades, ...trades];
+      }
+
+      save();
+      renderTable();
+      updateSidebar();
+      let msg = `CSV importado · ${imported.length} trades cargados`;
+      if(skipped.length) msg += ` · ${skipped.length} filas saltadas (sin activo ni fecha)`;
+      showToast(msg);
+    } catch(err){
+      alert('Error al leer el CSV: ' + err.message + '\n\nAsegurate de que el archivo sea un CSV exportado desde esta app.');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+// Parser de línea CSV que respeta comillas y comas dentro de campos
+function parseCSVLine(line){
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for(let i = 0; i < line.length; i++){
+    const ch = line[i];
+    if(ch === '"'){
+      if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; } // comilla escapada ""
+      else inQuotes = !inQuotes;
+    } else if(ch === ',' && !inQuotes){
+      result.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
 }
 
 function importData(input){
