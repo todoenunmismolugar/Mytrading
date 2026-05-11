@@ -2906,8 +2906,15 @@ function refreshAsrSelect(){
   const sel = document.getElementById('asr-trade-link');
   if(!sel) return;
   const cur = sel.value;
+  const accColors = ['#4f9cf9','#a78bfa','#3ecf8e','#f59e0b','#f472b6','#22d3ee','#fb923c','#84cc16'];
+  const accColorMap = {};
+  accounts.forEach((a,i)=>{ accColorMap[a.id] = accColors[i % accColors.length]; });
   sel.innerHTML = '<option value="">— Elegí un trade —</option>' +
-    trades.map(t=>`<option value="${t.id}">${t.fecha}${t.hora?' '+t.hora:''} · ${t.estrategia}${t.variante?' '+t.variante:''} · ${t.activo}${t.dir?' '+t.dir:''} · ${t.resultado||'?'}</option>`).join('');
+    trades.map(t=>{
+      const acc = accounts.find(a=>a.id===t.accountId);
+      const accLabel = acc ? ` [${acc.name}]` : '';
+      return `<option value="${t.id}">${t.fecha}${t.hora?' '+t.hora:''} · ${t.estrategia}${t.variante?' '+t.variante:''} · ${t.activo}${t.dir?' '+t.dir:''} · ${t.resultado||'?'}${accLabel}</option>`;
+    }).join('');
   sel.value = cur;
 }
 
@@ -2920,7 +2927,14 @@ function loadAsrTradePreview(){
   prev.style.display = 'block';
   const bc = {Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e'};
   const rc = {Win:'var(--green)',Loss:'var(--red)',BE:'var(--amber)',Open:'var(--accent)'};
-  prev.innerHTML = `<span style="color:${bc[t.estrategia]||'var(--text)'};font-weight:700">${t.estrategia}${t.variante?' '+t.variante:''}</span> &nbsp;|&nbsp; ${t.activo} &nbsp;|&nbsp; ${t.tipo||''} ${t.sesion?'· '+t.sesion:''} &nbsp;|&nbsp; <span style="color:${t.dir==='Long'?'var(--green)':'var(--red)'}">${t.dir||''}</span> &nbsp;|&nbsp; <span style="color:${rc[t.resultado]||'var(--text2)'}">${t.resultado||'?'}${t.rr?' · '+t.rr+'R':''}</span>${t.pnl?' &nbsp;|&nbsp; '+t.pnl:''}`;
+  const accColors = ['#4f9cf9','#a78bfa','#3ecf8e','#f59e0b','#f472b6','#22d3ee','#fb923c','#84cc16'];
+  const accColorMap = {};
+  accounts.forEach((a,i)=>{ accColorMap[a.id] = accColors[i % accColors.length]; });
+  const acc = accounts.find(a=>a.id===t.accountId);
+  const accBadge = acc
+    ? `<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;color:${accColorMap[acc.id]};background:${accColorMap[acc.id]}15;border:1px solid ${accColorMap[acc.id]}40;font-family:'JetBrains Mono',monospace">${escapeHtml(acc.name)}</span> &nbsp;|&nbsp; `
+    : '';
+  prev.innerHTML = `${accBadge}<span style="color:${bc[t.estrategia]||'var(--text)'};font-weight:700">${t.estrategia}${t.variante?' '+t.variante:''}</span> &nbsp;|&nbsp; ${t.activo} &nbsp;|&nbsp; ${t.tipo||''} ${t.sesion?'· '+t.sesion:''} &nbsp;|&nbsp; <span style="color:${t.dir==='Long'?'var(--green)':'var(--red)'}">${t.dir||''}</span> &nbsp;|&nbsp; <span style="color:${rc[t.resultado]||'var(--text2)'}">${t.resultado||'?'}${t.rr?' · '+t.rr+'R':''}</span>${t.pnl?' &nbsp;|&nbsp; '+t.pnl:''}`;
 }
 
 async function handleAsrImg(input, kind){
@@ -3082,10 +3096,17 @@ function renderAsrList(){
   if(!asrs.length){ c.innerHTML = '<div class="no-data">// Aún no guardaste ningún ASR</div>'; return; }
   const bc = {Blue:'b-blue',Red:'b-red',Pink:'b-pink',White:'b-white',Black:'b-black',Green:'b-green'};
   const rc = {Win:'b-win',Loss:'b-loss',BE:'b-be',Open:'b-open'};
+  const accColors = ['#4f9cf9','#a78bfa','#3ecf8e','#f59e0b','#f472b6','#22d3ee','#fb923c','#84cc16'];
+  const accColorMap = {};
+  accounts.forEach((acc,i)=>{ accColorMap[acc.id] = accColors[i % accColors.length]; });
   c.innerHTML = asrs.map(a=>{
     const t = trades.find(x=>x.id===a.tradeId);
+    const acc = t ? accounts.find(x=>x.id===t.accountId) : null;
+    const accBadge = acc
+      ? `<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;color:${accColorMap[acc.id]};background:${accColorMap[acc.id]}15;border:1px solid ${accColorMap[acc.id]}40;font-family:'JetBrains Mono',monospace">${escapeHtml(acc.name)}</span>`
+      : '';
     const tradeInfo = t
-      ? `<span class="badge ${bc[t.estrategia]||''}">${t.estrategia}${t.variante?' · '+t.variante:''}</span> <span style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace">${t.activo} · ${t.dir||''}</span> <span class="badge ${rc[t.resultado]||''}">${t.resultado||'?'}${t.rr?' · '+t.rr+'R':''}</span>`
+      ? `${accBadge} <span class="badge ${bc[t.estrategia]||''}">${t.estrategia}${t.variante?' · '+t.variante:''}</span> <span style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace">${t.activo} · ${t.dir||''}</span> <span class="badge ${rc[t.resultado]||''}">${t.resultado||'?'}${t.rr?' · '+t.rr+'R':''}</span>`
       : '<span style="color:var(--text3)">trade no encontrado</span>';
     const block = (title, val) => val ? `<div class="asr-card-block"><div class="asr-card-block-title">${title}</div><div class="asr-card-block-text">${escapeHtml(val)}</div></div>` : '';
     const yn = (label, val, txt) => (val||txt) ? `<div class="asr-card-block"><div class="asr-card-block-title">${label}${val?' <span style="color:var(--accent)">· '+val+'</span>':''}</div>${txt?`<div class="asr-card-block-text">${escapeHtml(txt)}</div>`:''}</div>` : '';
