@@ -337,7 +337,7 @@ tbody tr:hover td{background:var(--bg2)}
     </div>
   </nav>
   <div class="sidebar-bottom">
-    <div class="stats-mini">Total: <span id="sb-total">0</span> ops<br>Win rate: <span id="sb-wr">–</span></div>
+    <div class="stats-mini">Total: <span id="sb-total">0</span> ops<br>Win rate: <span id="sb-wr">–</span><br><span id="sb-autoexport" style="color:var(--text3)">Auto-backup: –</span></div>
     <button class="export-btn install-btn" id="install-app-btn" onclick="installApp()" style="display:none;background:var(--accent2);color:var(--accent);border-color:var(--accent)" title="Instalar como app en tu dispositivo">📱 Instalar app</button>
     <button class="export-btn" onclick="exportData()" title="Descargar respaldo de tus datos">↓ Exportar respaldo .json</button>
     <button class="export-btn" onclick="exportCSV()" title="Exportar trades a CSV para Excel / Sheets" style="color:var(--green);border-color:var(--green2)">↓ Exportar trades .csv</button>
@@ -1392,6 +1392,15 @@ function updateSidebar(){
   const closed = trades.filter(x => x.resultado==='Win'||x.resultado==='Loss');
   const wr = closed.length ? Math.round(trades.filter(x=>x.resultado==='Win').length/closed.length*100)+'%' : '–';
   document.getElementById('sb-wr').textContent = wr;
+  // Mostrar cuántos trades faltan para el próximo auto-backup
+  _dbGet('tj_autoexport_count').then(count=>{
+    const el = document.getElementById('sb-autoexport');
+    if(!el) return;
+    const n = count || 0;
+    const left = AUTO_EXPORT_EVERY - n;
+    el.textContent = `Auto-backup: ${left} trade${left!==1?'s':''} más`;
+    el.style.color = left <= 1 ? 'var(--amber)' : 'var(--text3)';
+  }).catch(()=>{});
 }
 
 function toggleSidebar(){
@@ -1880,11 +1889,13 @@ function showImgModal(id){
   document.body.appendChild(overlay);
 }
 
-function showToast(msg){
+function showToast(msg, duration=2200, type='normal'){
   const t = document.createElement('div');
-  t.className='toast'; t.textContent='✓ '+msg;
+  t.className = 'toast';
+  t.textContent = (type==='normal' ? '✓ ' : '') + msg;
+  if(type==='save') t.style.cssText += 'background:#0d3d26;border-color:var(--green);color:var(--green)';
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 2200);
+  setTimeout(()=>t.remove(), duration);
 }
 
 function getLastOperadoCapital(){
@@ -1960,6 +1971,8 @@ function addTrade(){
     trades.unshift(t);
     save();
     showToast('Operación guardada');
+    // Auto-export cada 5 trades nuevos
+    checkAutoExport();
   }
   resetForm();
 }
@@ -3165,6 +3178,42 @@ function renderAsrList(){
 
 
 // ===== Export / Import =====
+// === Auto-export cada 5 trades nuevos ===
+const AUTO_EXPORT_EVERY = 5;
+
+async function checkAutoExport(){
+  // Contador en IndexedDB
+  let count = await _dbGet('tj_autoexport_count').catch(()=>0) || 0;
+  count++;
+  await _dbSet('tj_autoexport_count', count).catch(()=>{});
+
+  if(count >= AUTO_EXPORT_EVERY){
+    await _dbSet('tj_autoexport_count', 0).catch(()=>{});
+    // Esperar un momento para que el toast de "guardado" se vea primero
+    setTimeout(()=>{
+      autoExportJSON();
+    }, 800);
+  }
+}
+
+function autoExportJSON(){
+  const payload = {
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    autoExport: true,
+    trades, asrs, accounts, movements, activeAccountId,
+    traderName: localStorage.getItem('tj_trader_name') || ''
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'trading_journal_auto_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Respaldo automático descargado · cada 5 trades', 4000);
+}
+
 function exportData(){
   if(trades.length === 0 && asrs.length === 0 && accounts.length <= 1 && movements.length === 0){
     alert('No hay datos para exportar todavía.');
