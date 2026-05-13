@@ -1254,28 +1254,49 @@ tbody tr:hover td{background:var(--bg2)}
 </div>
 
 <script>
-let trades = JSON.parse(localStorage.getItem('tj_v2') || '[]');
-let asrs = JSON.parse(localStorage.getItem('tj_asr') || '[]');
-let accounts = JSON.parse(localStorage.getItem('tj_accounts') || '[]');
-let movements = JSON.parse(localStorage.getItem('tj_movements') || '[]');
-let activeAccountId = localStorage.getItem('tj_active_account') || '';
+// === IndexedDB · almacenamiento sin límite de 5MB ===
+let trades = [], asrs = [], accounts = [], movements = [];
+let activeAccountId = '';
+let _db = null; // instancia de IndexedDB
+
+function _openDB(){
+  return new Promise((resolve, reject) => {
+    if(_db){ resolve(_db); return; }
+    const req = indexedDB.open('TradingJournalDB', 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('appData'))
+        db.createObjectStore('appData');
+    };
+    req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+function _dbGet(key){
+  return _openDB().then(db => new Promise((resolve, reject) => {
+    const req = db.transaction('appData','readonly').objectStore('appData').get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  }));
+}
+function _dbSet(key, value){
+  return _openDB().then(db => new Promise((resolve, reject) => {
+    const req = db.transaction('appData','readwrite').objectStore('appData').put(value, key);
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+  }));
+}
 
 // Si no hay cuentas, crear una por defecto
 if(accounts.length === 0){
   accounts = [{ id: 'default', name: 'Cuenta principal', createdAt: Date.now() }];
   activeAccountId = 'default';
-  try { localStorage.setItem('tj_accounts', JSON.stringify(accounts)); localStorage.setItem('tj_active_account', activeAccountId); } catch(e){}
-}
-// Migración: trades sin accountId los asignamos a la primera cuenta
-let migratedAny = false;
-trades.forEach(t=>{ if(!t.accountId){ t.accountId = accounts[0].id; migratedAny = true; } });
-if(migratedAny){
-  try { localStorage.setItem('tj_v2', JSON.stringify(trades)); } catch(e){}
+  saveAccounts(); saveActiveAccount();
 }
 
-function saveAccounts(){ try{ localStorage.setItem('tj_accounts', JSON.stringify(accounts)); }catch(e){} }
-function saveMovements(){ try{ localStorage.setItem('tj_movements', JSON.stringify(movements)); }catch(e){} }
-function saveActiveAccount(){ try{ localStorage.setItem('tj_active_account', activeAccountId); }catch(e){} }
+function saveAccounts(){ _dbSet('tj_accounts', accounts).catch(e=>console.error('saveAccounts:',e)); }
+function saveMovements(){ _dbSet('tj_movements', movements).catch(e=>console.error('saveMovements:',e)); }
+function saveActiveAccount(){ _dbSet('tj_active_account', activeAccountId).catch(e=>console.error('saveActiveAccount:',e)); }
 
 function getActiveAccount(){
   return accounts.find(a=>a.id===activeAccountId) || accounts[0];
@@ -1358,12 +1379,12 @@ let editingAsrId = null;
 const variants = {Blue:['Blue A','Blue B','Blue C'],Red:[],Pink:[],White:[],Black:[],Green:[]};
 
 function save(){
-  try {
-    localStorage.setItem('tj_v2', JSON.stringify(trades));
-    updateSidebar();
-  } catch(e){
-    alert('Error al guardar. Posiblemente la imagen es muy grande o llenaste el almacenamiento. Probá exportar y borrar operaciones viejas.');
-  }
+  _dbSet('tj_v2', trades)
+    .then(()=>updateSidebar())
+    .catch(e=>{
+      console.error('save error:', e);
+      alert('Error al guardar. Probá exportar el respaldo y recargar la app.');
+    });
 }
 
 function updateSidebar(){
@@ -2870,7 +2891,7 @@ function togAsrMood(el, val){
 }
 
 function saveAsrs(){
-  try { localStorage.setItem('tj_asr', JSON.stringify(asrs)); } catch(e){}
+  _dbSet('tj_asr', asrs).catch(e=>console.error('saveAsrs:',e));
 }
 
 function selAsrYN(el, key, val){
@@ -3517,16 +3538,108 @@ function loadTraderName(){
   }
 }
 
-// Init
-loadTraderName();
-document.getElementById('inp-fecha').value = new Date().toISOString().slice(0,10);
-document.getElementById('asr-fecha').value = new Date().toISOString().slice(0,10);
-refreshAccountSelectors();
-renderVariants();
-renderConfs();
-renderTfSlots();
-renderAsrList();
-updateSidebar();
+// === Inicialización asíncrona (espera a IndexedDB) ===
+async function initApp(){
+  // Mostrar overlay de carga
+  const overlay = document.createElement('div');
+  overlay.id = 'loading-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0d0f12;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
+  overlay.innerHTML = `
+    <svg width="48" height="48" viewBox="0 0 512 512" style="opacity:.8">
+      <path d="M96 384 L96 128 L160 128 L160 384 Z" fill="#4f9cf9"/>
+      <path d="M192 384 L192 192 L256 192 L256 384 Z" fill="#3ecf8e"/>
+      <path d="M288 384 L288 96 L352 96 L352 384 Z" fill="#f472b6"/>
+      <path d="M384 384 L384 256 L448 256 L448 384 Z" fill="#f59e0b"/>
+    </svg>
+    <div style="color:#556070;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.1em">Cargando datos...</div>`;
+  document.body.appendChild(overlay);
+
+  try {
+    await _openDB();
+
+    // Cargar cada clave desde IndexedDB
+    const [idbTrades, idbAsrs, idbAccounts, idbMovements, idbActiveAcc] = await Promise.all([
+      _dbGet('tj_v2'), _dbGet('tj_asr'), _dbGet('tj_accounts'),
+      _dbGet('tj_movements'), _dbGet('tj_active_account')
+    ]);
+
+    // Migración automática desde localStorage (solo la primera vez)
+    if(idbTrades === undefined){
+      console.log('Migrando datos de localStorage a IndexedDB...');
+      const lsTrades   = localStorage.getItem('tj_v2');
+      const lsAsrs     = localStorage.getItem('tj_asr');
+      const lsAccounts = localStorage.getItem('tj_accounts');
+      const lsMovs     = localStorage.getItem('tj_movements');
+      const lsActive   = localStorage.getItem('tj_active_account');
+
+      trades       = lsTrades   ? JSON.parse(lsTrades)   : [];
+      asrs         = lsAsrs     ? JSON.parse(lsAsrs)     : [];
+      accounts     = lsAccounts ? JSON.parse(lsAccounts) : [];
+      movements    = lsMovs     ? JSON.parse(lsMovs)     : [];
+      activeAccountId = lsActive || '';
+
+      // Guardar en IndexedDB
+      await Promise.all([
+        _dbSet('tj_v2', trades), _dbSet('tj_asr', asrs),
+        _dbSet('tj_accounts', accounts), _dbSet('tj_movements', movements),
+        _dbSet('tj_active_account', activeAccountId)
+      ]);
+
+      // Limpiar localStorage (ya no lo necesitamos para datos grandes)
+      ['tj_v2','tj_asr','tj_accounts','tj_movements','tj_active_account'].forEach(k=>{
+        try{ localStorage.removeItem(k); }catch(e){}
+      });
+      console.log('Migración completada.');
+    } else {
+      trades       = idbTrades    || [];
+      asrs         = idbAsrs      || [];
+      accounts     = idbAccounts  || [];
+      movements    = idbMovements || [];
+      activeAccountId = idbActiveAcc || '';
+    }
+
+    // Cuenta default si no hay ninguna
+    if(accounts.length === 0){
+      accounts = [{ id: 'default', name: 'Cuenta principal', createdAt: Date.now() }];
+      activeAccountId = 'default';
+      saveAccounts(); saveActiveAccount();
+    }
+
+    // Migrar trades sin accountId
+    let migratedAny = false;
+    trades.forEach(t=>{ if(!t.accountId){ t.accountId = accounts[0].id; migratedAny = true; } });
+    if(migratedAny) save();
+
+  } catch(err){
+    console.error('Error iniciando IndexedDB:', err);
+    // Fallback a localStorage si IndexedDB falla
+    trades       = JSON.parse(localStorage.getItem('tj_v2')       || '[]');
+    asrs         = JSON.parse(localStorage.getItem('tj_asr')       || '[]');
+    accounts     = JSON.parse(localStorage.getItem('tj_accounts')  || '[]');
+    movements    = JSON.parse(localStorage.getItem('tj_movements') || '[]');
+    activeAccountId = localStorage.getItem('tj_active_account') || '';
+    if(accounts.length === 0){
+      accounts = [{ id: 'default', name: 'Cuenta principal', createdAt: Date.now() }];
+      activeAccountId = 'default';
+    }
+  }
+
+  // Quitar overlay
+  document.body.removeChild(overlay);
+
+  // Arrancar la app
+  loadTraderName();
+  document.getElementById('inp-fecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('asr-fecha').value = new Date().toISOString().slice(0,10);
+  refreshAccountSelectors();
+  renderVariants();
+  renderConfs();
+  renderTfSlots();
+  renderAsrList();
+  updateSidebar();
+}
+
+initApp();
 
 // === PWA · sin Service Worker ===
 // La app es instalable como PWA gracias al manifest y los meta tags.
