@@ -1295,9 +1295,19 @@ if(accounts.length === 0){
   saveAccounts(); saveActiveAccount();
 }
 
-function saveAccounts(){ _dbSet('tj_accounts', accounts).catch(e=>console.error('saveAccounts:',e)); }
-function saveMovements(){ _dbSet('tj_movements', movements).catch(e=>console.error('saveMovements:',e)); }
-function saveActiveAccount(){ _dbSet('tj_active_account', activeAccountId).catch(e=>console.error('saveActiveAccount:',e)); }
+// Guardado dual: IDB + localStorage como backup (datos chicos, sin riesgo de quota)
+function saveAccounts(){
+  _dbSet('tj_accounts', accounts).catch(e=>console.error('saveAccounts IDB:',e));
+  try { localStorage.setItem('tj_accounts', JSON.stringify(accounts)); } catch(e){}
+}
+function saveMovements(){
+  _dbSet('tj_movements', movements).catch(e=>console.error('saveMovements IDB:',e));
+  try { localStorage.setItem('tj_movements', JSON.stringify(movements)); } catch(e){}
+}
+function saveActiveAccount(){
+  _dbSet('tj_active_account', activeAccountId).catch(e=>console.error('saveActiveAccount IDB:',e));
+  try { localStorage.setItem('tj_active_account', activeAccountId); } catch(e){}
+}
 
 function getActiveAccount(){
   return accounts.find(a=>a.id===activeAccountId) || accounts[0];
@@ -3651,11 +3661,12 @@ async function initApp(){
         _dbSet('tj_active_account', activeAccountId)
       ]);
 
-      // Limpiar localStorage (ya no lo necesitamos para datos grandes)
-      ['tj_v2','tj_asr','tj_accounts','tj_movements','tj_active_account'].forEach(k=>{
-        try{ localStorage.removeItem(k); }catch(e){}
-      });
-      console.log('Migración completada.');
+      // IMPORTANTE: NO limpiamos localStorage. Lo mantenemos como backup
+      // permanente para datos chicos (cuentas, movimientos, activa) que es
+      // crítico que no se pierdan. Los trades grandes con imágenes viven
+      // solo en IDB porque podrían exceder el límite de 5MB de localStorage.
+      // Pero los datos chicos están duplicados a propósito.
+      console.log('Migración completada. localStorage retenido como backup.');
     } else {
       trades       = idbTrades    || [];
       asrs         = idbAsrs      || [];
@@ -3664,10 +3675,74 @@ async function initApp(){
       activeAccountId = idbActiveAcc || '';
     }
 
+    // === RECOVERY · si IDB perdió datos chicos, intentar recuperar de localStorage ===
+    // Esto protege contra el bug donde cuentas desaparecen sin razón aparente.
+    let recoveredAny = false;
+
+    if(!accounts || accounts.length === 0){
+      const lsBackup = localStorage.getItem('tj_accounts');
+      if(lsBackup){
+        try {
+          const parsed = JSON.parse(lsBackup);
+          if(Array.isArray(parsed) && parsed.length > 0){
+            accounts = parsed;
+            console.log('✓ Cuentas recuperadas desde backup de localStorage');
+            recoveredAny = true;
+          }
+        } catch(e){}
+      }
+    }
+
+    if(!movements || movements.length === 0){
+      const lsBackup = localStorage.getItem('tj_movements');
+      if(lsBackup){
+        try {
+          const parsed = JSON.parse(lsBackup);
+          if(Array.isArray(parsed) && parsed.length > 0){
+            movements = parsed;
+            console.log('✓ Movimientos recuperados desde backup de localStorage');
+            recoveredAny = true;
+          }
+        } catch(e){}
+      }
+    }
+
+    if(!activeAccountId){
+      const lsActive = localStorage.getItem('tj_active_account');
+      if(lsActive){
+        activeAccountId = lsActive;
+        recoveredAny = true;
+      }
+    }
+
+    // Validar que la cuenta activa exista, si no, usar la primera disponible
+    if(activeAccountId && accounts.length > 0 && !accounts.find(a=>a.id===activeAccountId)){
+      activeAccountId = accounts[0].id;
+      recoveredAny = true;
+    }
+
+    if(recoveredAny){
+      // Re-guardar en IDB lo recuperado para que la próxima vez esté ahí
+      saveAccounts(); saveMovements(); saveActiveAccount();
+    }
+
     // Cuenta default si no hay ninguna
     if(accounts.length === 0){
-      accounts = [{ id: 'default', name: 'Cuenta principal', createdAt: Date.now() }];
-      activeAccountId = 'default';
+      // ÚLTIMA RED DE SEGURIDAD: si hay trades con accountIds, reconstruir las cuentas faltantes
+      // para no perder la asociación trade↔cuenta. Esto solo se ejecuta como rescate extremo.
+      const orphanIds = [...new Set(trades.map(t=>t.accountId).filter(Boolean))];
+      if(orphanIds.length > 0){
+        console.warn('⚠ Reconstruyendo ' + orphanIds.length + ' cuenta(s) desde trades huérfanos');
+        accounts = orphanIds.map((id, i) => ({
+          id: id,
+          name: 'Cuenta recuperada ' + (i+1),
+          createdAt: Date.now()
+        }));
+        activeAccountId = accounts[0].id;
+      } else {
+        accounts = [{ id: 'default', name: 'Cuenta principal', createdAt: Date.now() }];
+        activeAccountId = 'default';
+      }
       saveAccounts(); saveActiveAccount();
     }
 
@@ -3679,14 +3754,34 @@ async function initApp(){
   } catch(err){
     console.error('Error iniciando IndexedDB:', err);
     // Fallback a localStorage si IndexedDB falla
-    trades       = JSON.parse(localStorage.getItem('tj_v2')       || '[]');
-    asrs         = JSON.parse(localStorage.getItem('tj_asr')       || '[]');
-    accounts     = JSON.parse(localStorage.getItem('tj_accounts')  || '[]');
-    movements    = JSON.parse(localStorage.getItem('tj_movements') || '[]');
-    activeAccountId = localStorage.getItem('tj_active_account') || '';
+    try {
+      trades       = JSON.parse(localStorage.getItem('tj_v2')        || '[]');
+      asrs         = JSON.parse(localStorage.getItem('tj_asr')       || '[]');
+      accounts     = JSON.parse(localStorage.getItem('tj_accounts')  || '[]');
+      movements    = JSON.parse(localStorage.getItem('tj_movements') || '[]');
+      activeAccountId = localStorage.getItem('tj_active_account') || '';
+    } catch(e2){
+      console.error('Error leyendo localStorage:', e2);
+      trades = []; asrs = []; accounts = []; movements = []; activeAccountId = '';
+    }
+    // Misma red de seguridad: reconstruir cuentas si solo hay trades huérfanos
     if(accounts.length === 0){
-      accounts = [{ id: 'default', name: 'Cuenta principal', createdAt: Date.now() }];
-      activeAccountId = 'default';
+      const orphanIds = [...new Set(trades.map(t=>t.accountId).filter(Boolean))];
+      if(orphanIds.length > 0){
+        accounts = orphanIds.map((id, i) => ({
+          id: id,
+          name: 'Cuenta recuperada ' + (i+1),
+          createdAt: Date.now()
+        }));
+        activeAccountId = accounts[0].id;
+      } else {
+        accounts = [{ id: 'default', name: 'Cuenta principal', createdAt: Date.now() }];
+        activeAccountId = 'default';
+      }
+    }
+    // Validar cuenta activa
+    if(activeAccountId && !accounts.find(a=>a.id===activeAccountId)){
+      activeAccountId = accounts[0].id;
     }
   }
 
