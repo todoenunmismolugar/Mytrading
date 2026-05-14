@@ -634,7 +634,7 @@ tbody tr:hover td{background:var(--bg2)}
       <thead><tr>
         <th>Fecha</th><th>Duración</th><th>Cuenta</th><th>Modo</th><th>Estrategia</th><th>Tipo</th><th>Activo</th>
         <th>Sesión</th><th>Dir.</th><th>Orden</th><th>Gestión</th><th>Fibonacci</th><th>Patrón</th>
-        <th>Lotaje</th><th>R:R</th><th>P&L</th><th>Resultado</th><th>Gráfico</th><th>Notas</th><th></th>
+        <th>Lotaje</th><th>R:R</th><th>P&L</th><th>Resultado</th><th>ASR</th><th>Gráfico</th><th>Notas</th><th></th>
       </tr></thead>
       <tbody id="tbl-body"></tbody>
     </table>
@@ -656,6 +656,7 @@ tbody tr:hover td{background:var(--bg2)}
       <select class="filter-sel" id="sf-tipo" onchange="renderStats()"><option value="">Todos los estilos</option><option>Day</option><option>Swing</option><option>Scalp</option></select>
       <select class="filter-sel" id="sf-strat" onchange="renderStats()"><option value="">Todas las estrategias</option><option>Blue</option><option>Red</option><option>Pink</option><option>White</option><option>Black</option><option>Green</option></select>
       <select class="filter-sel" id="sf-dir" onchange="renderStats()"><option value="">Long + Short</option><option>Long</option><option>Short</option></select>
+      <select class="filter-sel" id="sf-result" onchange="renderStats()"><option value="">Todos los resultados</option><option value="Win">TP</option><option value="Loss">SL</option><option value="BE">BE</option><option value="Open">Abierto</option></select>
       <select class="filter-sel" id="sf-session" onchange="renderStats()"><option value="">Todas las sesiones</option><option>Sydney</option><option>Tokio</option><option>Londres</option><option>New York</option></select>
       <select class="filter-sel" id="sf-mercado" onchange="renderStats()"><option value="">Todos los mercados</option><option>Forex</option><option>Indices</option><option>Cripto</option><option>Acciones</option><option>Materias primas</option></select>
       <button onclick="resetStatsFilters()" style="padding:6px 12px;background:transparent;border:1px solid var(--border2);color:var(--text3);border-radius:var(--radius);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px">↻ limpiar</button>
@@ -1442,6 +1443,8 @@ function selStrat(el, s){
   el.className += ' on';
   curStrat = s;
   renderVariants();
+  // GREEN tiene temporalidades distintas — refrescar grid de imágenes
+  renderTfSlots();
 }
 
 function renderVariants(){
@@ -1568,6 +1571,15 @@ let activeTfSlot = '';
 
 // Slots según el tipo de trading
 function getTfSlots(){
+  // Temporalidades específicas para estrategia GREEN
+  if(curStrat === 'Green'){
+    const greenMap = {
+      Day:   ['Conjunto','4 horas','1 hora','5 min','2 min'],
+      Swing: ['Conjunto','Semanal','Diario','1 hora','15 min'],
+      Scalp: ['Conjunto','15 min','5 min','1 min','Ejecución']
+    };
+    return greenMap[curType] || greenMap.Day;
+  }
   const map = {
     Day:   ['Conjunto','Diario','4 horas','1 hora','Ejecución'],
     Swing: ['Conjunto','Mensual','Semanal','Diario','Ejecución'],
@@ -2217,6 +2229,10 @@ function renderTable(){
       <td style="font-family:'JetBrains Mono',monospace;font-weight:600">${t.rr?t.rr+'R':'–'}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${t.pnl&&t.pnl.startsWith('+')?'var(--green)':(t.pnl&&t.pnl.startsWith('-')?'var(--red)':'var(--text3)')}">${t.pnl||'–'}</td>
       <td><span class="badge ${resBC[t.resultado]||''}">${t.resultado||'–'}</span></td>
+      <td style="text-align:center">${asrs.some(a=>a.tradeId===t.id)
+        ? '<span title="ASR realizado" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--green2);color:var(--green);border:1px solid var(--green);font-weight:700;font-size:12px">✓</span>'
+        : '<span title="Sin ASR" style="color:var(--text3);font-size:14px">–</span>'
+      }</td>
       <td>${grafCol||'–'}</td>
       <td style="font-size:11px;color:var(--text3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(t.notas||'').replace(/"/g,'&quot;')}">${t.notas||'–'}</td>
       <td><button class="edit-btn" onclick="editTrade(${t.id})">✎</button><button class="del-btn" onclick="delTrade(${t.id})">✕</button></td>
@@ -2234,7 +2250,7 @@ const stratColors={Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',B
 function getStatsFiltered(){
   const f = id => document.getElementById(id)?.value || '';
   const fa = f('sf-account'), fm = f('sf-mode'), ft = f('sf-tipo'), fs = f('sf-strat');
-  const fd = f('sf-dir'), fses = f('sf-session'), fmer = f('sf-mercado');
+  const fd = f('sf-dir'), fres = f('sf-result'), fses = f('sf-session'), fmer = f('sf-mercado');
   const ffrom = f('sf-from'), fto = f('sf-to');
   return trades.filter(t =>
     (!fa || t.accountId===fa) &&
@@ -2242,6 +2258,7 @@ function getStatsFiltered(){
     (!ft || t.tipo===ft) &&
     (!fs || t.estrategia===fs) &&
     (!fd || t.dir===fd) &&
+    (!fres || t.resultado===fres) &&
     (!fses || (t.sesion||'').includes(fses)) &&
     (!fmer || t.mercado===fmer) &&
     (!ffrom || (t.fecha||'') >= ffrom) &&
@@ -2277,7 +2294,7 @@ function setStatsPreset(preset){
 }
 
 function resetStatsFilters(){
-  ['sf-account','sf-mode','sf-tipo','sf-strat','sf-dir','sf-session','sf-mercado','sf-from','sf-to'].forEach(id=>{
+  ['sf-account','sf-mode','sf-tipo','sf-strat','sf-dir','sf-result','sf-session','sf-mercado','sf-from','sf-to'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
   });
   document.querySelectorAll('.filter-preset-btn').forEach(b=>b.classList.remove('on'));
@@ -3035,7 +3052,7 @@ function addAsr(){
     asrs.unshift(a);
     showToast('ASR guardado');
   }
-  saveAsrs(); resetAsrForm(); renderAsrList();
+  saveAsrs(); resetAsrForm(); renderAsrList(); renderTable();
 }
 
 function resetAsrForm(){
@@ -3099,7 +3116,7 @@ function editAsr(id){
 
 function delAsr(id){
   if(!confirm('¿Eliminar este ASR?')) return;
-  asrs = asrs.filter(a=>a.id!==id); saveAsrs(); renderAsrList();
+  asrs = asrs.filter(a=>a.id!==id); saveAsrs(); renderAsrList(); renderTable();
 }
 
 function renderAsrList(){
