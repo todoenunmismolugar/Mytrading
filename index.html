@@ -327,6 +327,9 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
 .mc-btn:hover{filter:brightness(1.08)}
 .mc-btn.ghost{background:transparent;border:1px solid var(--border2);color:var(--text)}
 @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+.pt-accpill{user-select:none}
+.pt-accpill.on{background:var(--accent2);border-color:var(--accent);color:var(--accent);font-weight:600}
+.pt-accpill.pt-all.on{background:var(--green2);border-color:var(--green);color:var(--green)}
 </style>
 <!-- Pre-paint del tema: se aplica antes de renderizar para que no haya parpadeo -->
 <script>(function(){try{var t=localStorage.getItem('tj_theme');if(t!=='light'&&t!=='dark')t='dark';document.documentElement.setAttribute('data-theme',t);var mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',t==='light'?'#ffffff':'#0d0f12');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
@@ -1095,7 +1098,8 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
   <div class="mc-grid2">
     <div class="mc-card">
       <div class="mc-qt">Parámetros de la proyección</div>
-      <label class="mc-fl">Cuenta</label><select id="pt-acc" class="mc-in" onchange="ptAccChange()"></select>
+      <label class="mc-fl">Cuentas <span style="text-transform:none;letter-spacing:0;color:var(--text3)">· elegí una, varias o todas</span></label>
+      <div id="pt-acc-pills" class="pills" style="margin:2px 0 6px"></div>
       <label class="mc-fl">Capital inicial (USD)</label><input id="pt-cap" class="mc-in" type="number" step="any" placeholder="1000" oninput="ptCalc()">
       <label class="mc-fl">Riesgo por operación (%)</label><input id="pt-risk" class="mc-in" type="number" step="0.1" value="1" oninput="ptCalc()">
       <label class="mc-fl">Win rate (%)</label><input id="pt-wr" class="mc-in" type="number" step="1" placeholder="50" oninput="ptCalc()">
@@ -3979,49 +3983,68 @@ function loadTraderName(){
   };
 
   /* ================= POTENCIAL · proyección de cuenta ================= */
+  // --- estado de selección de cuentas: una, varias o todas ---
+  let ptAllMode=false;
+  let ptSel=new Set();
+  function ptIds(){
+    const all=accList().map(a=>a.id);
+    if(ptAllMode) return all;
+    const ids=[...ptSel].filter(id=>all.includes(id));
+    return ids.length?ids:[actAcc()];
+  }
+  function ptRenderPills(){
+    const box=document.getElementById('pt-acc-pills');
+    if(!box) return;
+    let html='<div class="pill pt-accpill pt-all'+(ptAllMode?' on':'')+'" onclick="ptPickAll()">★ Todas</div>';
+    html+=accList().map(function(a){
+      const on=(!ptAllMode && ptSel.has(a.id));
+      return '<div class="pill pt-accpill'+(on?' on':'')+'" onclick="ptPickAcc(\''+a.id+'\')">'+a.name+'</div>';
+    }).join('');
+    box.innerHTML=html;
+  }
+  window.ptPickAll=function(){ ptAllMode=true; ptSel.clear(); ptRenderPills(); ptAccChange(); };
+  window.ptPickAcc=function(id){
+    ptAllMode=false;
+    if(ptSel.has(id)) ptSel.delete(id); else ptSel.add(id);
+    if(ptSel.size===0) ptAllMode=true;   // si queda vacío, volvemos a Todas
+    ptRenderPills(); ptAccChange();
+  };
   window.ptInit=function(){
-    const sel=document.getElementById('pt-acc');
-    if(sel){
-      const opts=accList().map(a=>`<option value="${a.id}" ${a.id===actAcc()?'selected':''}>${a.name}</option>`).join('');
-      sel.innerHTML='<option value="__ALL__">★ Todas las cuentas (global)</option>'+opts;
-    }
+    ptAllMode=false; ptSel=new Set([actAcc()]);   // arranca en la cuenta activa
+    ptRenderPills();
     ptAccChange();
   };
   window.ptAccChange=function(){
-    const sel=document.getElementById('pt-acc');
     const capEl=document.getElementById('pt-cap');
-    if(sel&&capEl&&typeof getAccountCapital==='function'){
-      let c=0;
-      if(sel.value==='__ALL__'){
-        c=accList().reduce((acc,a)=>acc+(getAccountCapital(a.id)||0),0);
-      } else {
-        c=getAccountCapital(sel.value);
-      }
+    if(capEl&&typeof getAccountCapital==='function'){
+      const c=ptIds().reduce((acc,id)=>acc+(getAccountCapital(id)||0),0);
       if(c) capEl.value=c.toFixed(2);
     }
     ptCalc();
   };
   window.ptFromStats=function(){
-    const sel=document.getElementById('pt-acc');
-    const accId=sel?sel.value:actAcc();
-    const isAll=(accId==='__ALL__');
+    const ids=ptIds();
+    const total=accList().length;
+    const isAll=ptAllMode || ids.length===total;
+    const many=ids.length>1;
+    const idset=new Set(ids);
     const tAll=(typeof trades!=='undefined')?trades:[];
-    const closed=tAll.filter(t=>(isAll||t.accountId===accId) && (t.resultado==='Win'||t.resultado==='Loss'));
+    const closed=tAll.filter(t=>idset.has(t.accountId) && (t.resultado==='Win'||t.resultado==='Loss'));
     const note=document.getElementById('pt-stats-note');
-    if(closed.length<5){ if(note)note.innerHTML='<span style="color:var(--amber)">Necesitás al menos 5 trades cerrados (TP/SL) '+(isAll?'entre todas las cuentas':'en esta cuenta')+' para estimar bien. Cargá más o ajustá a mano.</span>'; return; }
+    const scope=isAll?'entre todas las cuentas':(many?('entre las '+ids.length+' cuentas elegidas'):'en esta cuenta');
+    if(closed.length<5){ if(note)note.innerHTML='<span style="color:var(--amber)">Necesitás al menos 5 trades cerrados (TP/SL) '+scope+' para estimar bien. Cargá más o ajustá a mano.</span>'; return; }
     const wins=closed.filter(t=>t.resultado==='Win').length;
     const wr=wins/closed.length*100;
-    // R:R promedio a partir de rr/rrPlan de los trades
     const rrs=closed.map(t=>Math.abs(parseFloat(t.rr)||parseFloat(t.rrPlan)||0)).filter(x=>x>0);
     const avgRR=rrs.length?rrs.reduce((a,b)=>a+b,0)/rrs.length:2;
-    // riesgo % promedio
     const risks=closed.map(t=>parseFloat(t.riesgoPct)||0).filter(x=>x>0);
     const avgRisk=risks.length?risks.reduce((a,b)=>a+b,0)/risks.length:1;
     const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
     set('pt-wr',Math.round(wr));
     set('pt-rr',avgRR.toFixed(1));
     if(avgRisk>0) set('pt-risk',avgRisk.toFixed(2));
-    if(note)note.innerHTML='<span style="color:var(--green)">✓ Tomé tus '+closed.length+' trades cerrados'+(isAll?' de TODAS las cuentas':'')+': win rate '+Math.round(wr)+'% · R:R promedio '+avgRR.toFixed(1)+' · riesgo '+avgRisk.toFixed(2)+'%.</span>';
+    const scope2=isAll?' de TODAS las cuentas':(many?(' de '+ids.length+' cuentas'):'');
+    if(note)note.innerHTML='<span style="color:var(--green)">✓ Tomé tus '+closed.length+' trades cerrados'+scope2+': win rate '+Math.round(wr)+'% · R:R promedio '+avgRR.toFixed(1)+' · riesgo '+avgRisk.toFixed(2)+'%.</span>';
     ptCalc();
   };
   window.ptCalc=function(){
