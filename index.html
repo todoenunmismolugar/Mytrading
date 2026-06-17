@@ -3431,6 +3431,10 @@ function autoExportJSON(){
   showToast('💾 Respaldo automático descargado · cada 5 trades', 4000);
 }
 
+function tjStamp(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'-'+p(d.getMinutes())+'-'+p(d.getSeconds());
+}
 function exportData(){
   if(trades.length === 0 && asrs.length === 0 && accounts.length <= 1 && movements.length === 0){
     alert('No hay datos para exportar todavía.');
@@ -3450,7 +3454,7 @@ function exportData(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'trading_journal_respaldo_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'trading_journal_respaldo_' + tjStamp() + '.json';
   a.click();
   URL.revokeObjectURL(url);
   showToast('Respaldo descargado · ' + trades.length + ' ops · ' + asrs.length + ' ASRs · ' + accounts.length + ' cuentas · ' + movements.length + ' mov.');
@@ -3530,7 +3534,7 @@ function exportCSV(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'trading_journal_trades_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = 'trading_journal_trades_' + tjStamp() + '.csv';
   a.click();
   URL.revokeObjectURL(url);
   showToast('CSV exportado · ' + trades.length + ' trades');
@@ -3710,7 +3714,13 @@ function importData(input){
       if(isEmpty){
         action = 'replace';
       } else {
+        const fewer = impTrades.length < trades.length;
+        const warn = fewer
+          ? '⚠️ OJO: el respaldo tiene MENOS operaciones (' + impTrades.length + ') que las que ya tenés cargadas (' + trades.length + ').\n' +
+            'Si elegís Reemplazar, perderías ' + (trades.length - impTrades.length) + ' operaciones.\n\n'
+          : '';
         const choice = confirm(
+          warn +
           'Datos actuales: ' + trades.length + ' ops · ' + asrs.length + ' ASRs · ' + accounts.length + ' cuentas · ' + movements.length + ' mov.\n' +
           'En el respaldo: ' + impTrades.length + ' ops · ' + impAsrs.length + ' ASRs · ' + impAccounts.length + ' cuentas · ' + impMovs.length + ' mov.\n\n' +
           'ACEPTAR = Reemplazar TODO con el respaldo\n' +
@@ -3971,14 +3981,22 @@ function loadTraderName(){
   /* ================= POTENCIAL · proyección de cuenta ================= */
   window.ptInit=function(){
     const sel=document.getElementById('pt-acc');
-    if(sel){ sel.innerHTML=accList().map(a=>`<option value="${a.id}" ${a.id===actAcc()?'selected':''}>${a.name}</option>`).join(''); }
+    if(sel){
+      const opts=accList().map(a=>`<option value="${a.id}" ${a.id===actAcc()?'selected':''}>${a.name}</option>`).join('');
+      sel.innerHTML='<option value="__ALL__">★ Todas las cuentas (global)</option>'+opts;
+    }
     ptAccChange();
   };
   window.ptAccChange=function(){
     const sel=document.getElementById('pt-acc');
     const capEl=document.getElementById('pt-cap');
     if(sel&&capEl&&typeof getAccountCapital==='function'){
-      const c=getAccountCapital(sel.value);
+      let c=0;
+      if(sel.value==='__ALL__'){
+        c=accList().reduce((acc,a)=>acc+(getAccountCapital(a.id)||0),0);
+      } else {
+        c=getAccountCapital(sel.value);
+      }
       if(c) capEl.value=c.toFixed(2);
     }
     ptCalc();
@@ -3986,10 +4004,11 @@ function loadTraderName(){
   window.ptFromStats=function(){
     const sel=document.getElementById('pt-acc');
     const accId=sel?sel.value:actAcc();
+    const isAll=(accId==='__ALL__');
     const tAll=(typeof trades!=='undefined')?trades:[];
-    const closed=tAll.filter(t=>t.accountId===accId && (t.resultado==='Win'||t.resultado==='Loss'));
+    const closed=tAll.filter(t=>(isAll||t.accountId===accId) && (t.resultado==='Win'||t.resultado==='Loss'));
     const note=document.getElementById('pt-stats-note');
-    if(closed.length<5){ if(note)note.innerHTML='<span style="color:var(--amber)">Necesitás al menos 5 trades cerrados (TP/SL) en esta cuenta para estimar bien. Cargá más o ajustá a mano.</span>'; return; }
+    if(closed.length<5){ if(note)note.innerHTML='<span style="color:var(--amber)">Necesitás al menos 5 trades cerrados (TP/SL) '+(isAll?'entre todas las cuentas':'en esta cuenta')+' para estimar bien. Cargá más o ajustá a mano.</span>'; return; }
     const wins=closed.filter(t=>t.resultado==='Win').length;
     const wr=wins/closed.length*100;
     // R:R promedio a partir de rr/rrPlan de los trades
@@ -4002,7 +4021,7 @@ function loadTraderName(){
     set('pt-wr',Math.round(wr));
     set('pt-rr',avgRR.toFixed(1));
     if(avgRisk>0) set('pt-risk',avgRisk.toFixed(2));
-    if(note)note.innerHTML='<span style="color:var(--green)">✓ Tomé tus '+closed.length+' trades cerrados: win rate '+Math.round(wr)+'% · R:R promedio '+avgRR.toFixed(1)+' · riesgo '+avgRisk.toFixed(2)+'%.</span>';
+    if(note)note.innerHTML='<span style="color:var(--green)">✓ Tomé tus '+closed.length+' trades cerrados'+(isAll?' de TODAS las cuentas':'')+': win rate '+Math.round(wr)+'% · R:R promedio '+avgRR.toFixed(1)+' · riesgo '+avgRisk.toFixed(2)+'%.</span>';
     ptCalc();
   };
   window.ptCalc=function(){
