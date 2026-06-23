@@ -2561,6 +2561,7 @@ function renderStats(){
   const opens = t.filter(x=>x.resultado==='Open').length;
   const closed = wins+losses;
   const wr = closed ? Math.round(wins/closed*100) : 0;
+  const lr = closed ? Math.round(losses/closed*100) : 0;
   const wrInclBE = (closed+bes) ? (wins/(closed+bes)*100) : 0;
 
   // RR promedio (de todos con rr definido)
@@ -2570,6 +2571,7 @@ function renderStats(){
   document.getElementById('kpi-grid').innerHTML = `
     <div class="kpi"><div class="kpi-label">Total operaciones</div><div class="kpi-val">${total}</div></div>
     <div class="kpi"><div class="kpi-label">Win rate (excl. BE)</div><div class="kpi-val" style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</div></div>
+    <div class="kpi"><div class="kpi-label">Loss rate (excl. BE)</div><div class="kpi-val" style="color:${lr>50?'var(--red)':'var(--green)'}">${lr}%</div></div>
     <div class="kpi"><div class="kpi-label">Wins · Losses · BE</div><div class="kpi-val" style="font-size:18px"><span style="color:var(--green)">${wins}</span> · <span style="color:var(--red)">${losses}</span> · <span style="color:var(--amber)">${bes}</span></div></div>
     <div class="kpi"><div class="kpi-label">RR promedio</div><div class="kpi-val">${rrAvg.toFixed(2)}R</div></div>
     <div class="kpi"><div class="kpi-label">Operaciones abiertas</div><div class="kpi-val">${opens}</div></div>
@@ -2606,6 +2608,7 @@ function renderStats(){
   document.getElementById('adv-metrics').innerHTML = `
     <div class="adv-metric"><div class="adv-metric-label">RR medio</div><div class="adv-metric-val">${rrAvg.toFixed(3)}</div><div class="adv-metric-sub">de todos los trades</div></div>
     <div class="adv-metric"><div class="adv-metric-label">Winrate (excl. BE)</div><div class="adv-metric-val" style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</div><div class="adv-metric-sub">${wins} de ${closed}</div></div>
+    <div class="adv-metric"><div class="adv-metric-label">Loss rate (excl. BE)</div><div class="adv-metric-val" style="color:${lr>50?'var(--red)':'var(--green)'}">${lr}%</div><div class="adv-metric-sub">${losses} de ${closed}</div></div>
     <div class="adv-metric"><div class="adv-metric-label">Beneficio total</div><div class="adv-metric-val" style="color:${pnlSum>=0?'var(--green)':'var(--red)'}">${pnlSum>=0?'+':''}$ ${pnlSum.toFixed(2)}</div><div class="adv-metric-sub">${total} ops totales</div></div>
     <div class="adv-metric"><div class="adv-metric-label">Número de trades</div><div class="adv-metric-val">${total}</div><div class="adv-metric-sub">tras filtros</div></div>
     <div class="adv-metric"><div class="adv-metric-label">AVG Win</div><div class="adv-metric-val" style="color:var(--green)">${avgWinR.toFixed(3)}R</div><div class="adv-metric-sub">${winsArr.length} ganadores</div></div>
