@@ -130,6 +130,7 @@ textarea{resize:vertical;min-height:68px;line-height:1.5}
 .p-white.on{background:#2a2f36;border-color:#c0c9d4;color:#c0c9d4}
 .p-black.on{background:#1a1e24;border-color:#e8edf2;color:#e8edf2}
 .p-green.on{background:#0d2a1a;border-color:#3ecf8e;color:#3ecf8e}
+.p-otra.on{background:#2e2410;border-color:#f59e0b;color:#f59e0b}
 .p-long.on{background:var(--green2);border-color:var(--green);color:var(--green)}
 .p-short.on{background:var(--red2);border-color:var(--red);color:var(--red)}
 .p-win.on{background:var(--green2);border-color:var(--green);color:var(--green)}
@@ -183,7 +184,7 @@ tbody tr:hover td{background:var(--bg2)}
 .tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
 .badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace}
 .b-blue{background:#0f2a4a;color:#4f9cf9}.b-red{background:#3d1212;color:#f05252}.b-pink{background:#3d1030;color:#f472b6}
-.b-white{background:#2a2f36;color:#c0c9d4}.b-black{background:#1a1e24;color:#e8edf2}.b-green{background:#0d2a1a;color:#3ecf8e}
+.b-white{background:#2a2f36;color:#c0c9d4}.b-black{background:#1a1e24;color:#e8edf2}.b-green{background:#0d2a1a;color:#3ecf8e}.b-otra{background:#2e2410;color:#f59e0b}
 .b-win{background:var(--green2);color:var(--green)}.b-loss{background:var(--red2);color:var(--red)}
 .b-be{background:var(--amber2);color:var(--amber)}.b-open{background:var(--accent2);color:var(--accent)}
 .b-long{color:var(--green);font-weight:600}.b-short{color:var(--red);font-weight:600}
@@ -427,6 +428,7 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
     <div class="pill p-white" onclick="selStrat(this,'White')">White</div>
     <div class="pill p-black" onclick="selStrat(this,'Black')">Black</div>
     <div class="pill p-green" onclick="selStrat(this,'Green')">Green</div>
+    <div class="pill p-otra" onclick="selStrat(this,'Otra')">Otra</div>
   </div>
   <div id="variant-row" style="margin-top:10px"><div class="pills" id="variantPills"></div></div>
 
@@ -570,6 +572,19 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
       <div class="pill p-patron" onclick="selPatron(this)">Doble suelo</div>
     </div>
   </div>
+  <div class="form-group" style="margin-bottom:14px">
+    <label>Patrón de velas <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(podés elegir varios)</span></label>
+    <div class="pills" id="candlePills">
+      <div class="pill p-conf" onclick="togPill(this)">High test</div>
+      <div class="pill p-conf" onclick="togPill(this)">Low test</div>
+      <div class="pill p-conf" onclick="togPill(this)">Morning star</div>
+      <div class="pill p-conf" onclick="togPill(this)">Evening star</div>
+      <div class="pill p-conf" onclick="togPill(this)">Envolvente alcista</div>
+      <div class="pill p-conf" onclick="togPill(this)">Envolvente bajista</div>
+      <div class="pill p-conf" onclick="togPill(this)">Doji</div>
+      <div class="pill p-conf" onclick="togPill(this)">Martillo</div>
+    </div>
+  </div>
 
   <div class="section-label">Gráficos de la operación <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(uno por temporalidad)</span></div>
   <div id="tfImagesGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px"></div>
@@ -666,7 +681,7 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
   <div class="page-sub">Todas tus operaciones registradas</div>
   <div class="filters-bar">
     <select class="filter-sel" id="f-account" onchange="renderTable()"><option value="">Todas las cuentas</option></select>
-    <select class="filter-sel" id="f-strat" onchange="renderTable()"><option value="">Todas las estrategias</option><option>Blue</option><option>Red</option><option>Pink</option><option>White</option><option>Black</option><option>Green</option></select>
+    <select class="filter-sel" id="f-strat" onchange="renderTable()"><option value="">Todas las estrategias</option><option>Blue</option><option>Red</option><option>Pink</option><option>White</option><option>Black</option><option>Green</option><option>Otra</option></select>
     <select class="filter-sel" id="f-result" onchange="renderTable()"><option value="">Todos los resultados</option><option>Win</option><option>Loss</option><option>BE</option><option>Open</option></select>
     <select class="filter-sel" id="f-tipo" onchange="renderTable()"><option value="">Day / Swing / Scalp</option><option>Day</option><option>Swing</option><option>Scalp</option></select>
     <select class="filter-sel" id="f-dir" onchange="renderTable()"><option value="">Long / Short</option><option>Long</option><option>Short</option></select>
@@ -699,7 +714,7 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
       <select class="filter-sel" id="sf-account" onchange="renderStats()"><option value="">Todas las cuentas</option></select>
       <select class="filter-sel" id="sf-mode" onchange="renderStats()"><option value="">Operado + Backtest</option><option>Operado</option><option>Backtest</option></select>
       <select class="filter-sel" id="sf-tipo" onchange="renderStats()"><option value="">Todos los estilos</option><option>Day</option><option>Swing</option><option>Scalp</option></select>
-      <select class="filter-sel" id="sf-strat" onchange="renderStats()"><option value="">Todas las estrategias</option><option>Blue</option><option>Red</option><option>Pink</option><option>White</option><option>Black</option><option>Green</option></select>
+      <select class="filter-sel" id="sf-strat" onchange="renderStats()"><option value="">Todas las estrategias</option><option>Blue</option><option>Red</option><option>Pink</option><option>White</option><option>Black</option><option>Green</option><option>Otra</option></select>
       <select class="filter-sel" id="sf-dir" onchange="renderStats()"><option value="">Long + Short</option><option>Long</option><option>Short</option></select>
       <select class="filter-sel" id="sf-result" onchange="renderStats()"><option value="">Todos los resultados</option><option value="Win">TP</option><option value="Loss">SL</option><option value="BE">BE</option><option value="Open">Abierto</option></select>
       <select class="filter-sel" id="sf-session" onchange="renderStats()"><option value="">Todas las sesiones</option><option>Sydney</option><option>Tokio</option><option>Londres</option><option>New York</option></select>
@@ -738,6 +753,7 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
     <div class="chart-card full"><div class="chart-title">Matriz · estrategia × estilo × sesión</div><div id="chart-matrix"></div></div>
     <div class="chart-card full"><div class="chart-title">Confirmaciones — tasa de win</div><div id="chart-conf"></div></div>
     <div class="chart-card full"><div class="chart-title">Patrones — tasa de win</div><div id="chart-patron"></div></div>
+    <div class="chart-card full"><div class="chart-title">Patrones de velas — tasa de win</div><div id="chart-candle"></div></div>
     <div class="chart-card full"><div class="chart-title">Errores principales — frecuencia y win rate (desde ASRs)</div><div id="chart-errors"></div></div>
     <div class="chart-card full"><div class="chart-title">Estado mental — win rate (desde ASRs)</div><div id="chart-moods"></div></div>
   </div>
@@ -1576,7 +1592,7 @@ let editingId = null;
 let curEmo = '';
 let editingAsrId = null;
 
-const variants = {Blue:['Blue A','Blue B','Blue C'],Red:[],Pink:[],White:[],Black:[],Green:[]};
+const variants = {Blue:['Blue A','Blue B','Blue C'],Red:[],Pink:[],White:[],Black:[],Green:[],Otra:[]};
 
 function save(){
   _dbSet('tj_v2', trades)
@@ -1741,6 +1757,7 @@ function selSession(el, s){
 
 function getFibs(){ return Array.from(document.querySelectorAll('#fibPills .on')).map(x=>x.textContent); }
 function getConfs(){ return Array.from(document.querySelectorAll('#confPills .on')).map(x=>x.textContent); }
+function getCandles(){ return Array.from(document.querySelectorAll('#candlePills .on')).map(x=>x.textContent); }
 
 // Compress image to keep localStorage manageable
 function compressImage(file, maxWidth=1400, quality=0.82){
@@ -2172,6 +2189,7 @@ function addTrade(){
     fibonacci: getFibs().join(', '),
     confirmaciones: getConfs().join(', '),
     patron: curPatron,
+    candlesticks: getCandles().join(', '),
     link: document.getElementById('inp-link').value.trim(),
     imagenes: Object.assign({}, curImagenes),
     imgNotes: Object.assign({}, curImgNotes),
@@ -2251,6 +2269,13 @@ function editTrade(id){
   curPatron = t.patron || '';
   document.querySelectorAll('#patronPills .pill').forEach(p=>{
     p.classList.toggle('on', p.textContent===curPatron);
+  });
+
+  // Patrón de velas (multi-select)
+  const candStr = t.candlesticks || '';
+  const candArr = candStr ? candStr.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  document.querySelectorAll('#candlePills .pill').forEach(p=>{
+    p.classList.toggle('on', candArr.includes(p.textContent));
   });
 
   // Sesión
@@ -2369,7 +2394,7 @@ function resetForm(){
   onAccountChange();
 }
 
-const stratBC = {Blue:'b-blue',Red:'b-red',Pink:'b-pink',White:'b-white',Black:'b-black',Green:'b-green'};
+const stratBC = {Blue:'b-blue',Red:'b-red',Pink:'b-pink',White:'b-white',Black:'b-black',Green:'b-green',Otra:'b-otra'};
 const resBC = {Win:'b-win',Loss:'b-loss',BE:'b-be',Open:'b-open'};
 
 function renderTable(){
@@ -2449,7 +2474,7 @@ function delTrade(id){
   trades = trades.filter(t=>t.id!==id); save(); renderTable();
 }
 
-const stratColors={Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e'};
+const stratColors={Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e',Otra:'#f59e0b'};
 
 function getStatsFiltered(){
   const f = id => document.getElementById(id)?.value || '';
@@ -2591,8 +2616,8 @@ function renderStats(){
   `;
 
   // === Win rate por estrategia ===
-  const strats = ['Blue','Red','Pink','White','Black','Green'];
-  const stratColors = {Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e'};
+  const strats = ['Blue','Red','Pink','White','Black','Green','Otra'];
+  const stratColors = {Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e',Otra:'#f59e0b'};
   document.getElementById('chart-strat').innerHTML = strats.map(s=>{
     const st = t.filter(x=>x.estrategia===s);
     const w = st.filter(x=>x.resultado==='Win').length;
@@ -2733,6 +2758,22 @@ function renderStats(){
   }).filter(x=>x.n>0).sort((a,b)=>b.wr-a.wr);
   document.getElementById('chart-patron').innerHTML = pStats.length ? pStats.map(x=>
     `<div class="bar-row"><span class="bar-lbl">${x.p}</span><div class="bar-track"><div class="bar-fill" style="width:${x.wr}%;background:var(--amber)">${x.wr>15?x.wr+'%':''}</div></div><span class="bar-cnt">${x.n}</span></div>`
+  ).join('') : '<div class="no-data">// Sin datos</div>';
+
+  // === Patrones de velas (multi-valor por trade) ===
+  const allCandles = new Set();
+  t.forEach(x=>{
+    (x.candlesticks||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(c=>allCandles.add(c));
+  });
+  const candStats = Array.from(allCandles).map(c=>{
+    const st = t.filter(x=>(x.candlesticks||'').split(',').map(s=>s.trim()).includes(c));
+    const w = st.filter(x=>x.resultado==='Win').length;
+    const l = st.filter(x=>x.resultado==='Loss').length;
+    const wr = (w+l) ? Math.round(w/(w+l)*100) : 0;
+    return { c, wr, n: st.length };
+  }).filter(x=>x.n>0).sort((a,b)=>b.wr-a.wr);
+  document.getElementById('chart-candle').innerHTML = candStats.length ? candStats.map(x=>
+    `<div class="bar-row"><span class="bar-lbl">${x.c}</span><div class="bar-track"><div class="bar-fill" style="width:${x.wr}%;background:var(--amber)">${x.wr>15?x.wr+'%':''}</div></div><span class="bar-cnt">${x.n}</span></div>`
   ).join('') : '<div class="no-data">// Sin datos</div>';
 
   // === Errores y Estados mentales (desde ASRs vinculados a trades) ===
@@ -2905,7 +2946,7 @@ function renderCartera(){
   // Tabla últimos trades
   if(ops.length){
     const last = ops.slice().reverse().slice(0,15);
-    const stratColors = {Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e'};
+    const stratColors = {Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e',Otra:'#f59e0b'};
     // Capital corrido por id (incluyendo movimientos)
     const capByOp = new Map();
     let r = capInicial;
@@ -3158,7 +3199,7 @@ function loadAsrTradePreview(){
   const t = trades.find(x=>x.id==id);
   if(!t){ prev.style.display='none'; return; }
   prev.style.display = 'block';
-  const bc = {Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e'};
+  const bc = {Blue:'#4f9cf9',Red:'#f05252',Pink:'#f472b6',White:'#c0c9d4',Black:'#e8edf2',Green:'#3ecf8e',Otra:'#f59e0b'};
   const rc = {Win:'var(--green)',Loss:'var(--red)',BE:'var(--amber)',Open:'var(--accent)'};
   const accColors = ['#4f9cf9','#a78bfa','#3ecf8e','#f59e0b','#f472b6','#22d3ee','#fb923c','#84cc16'];
   const accColorMap = {};
@@ -3327,7 +3368,7 @@ function renderAsrList(){
   refreshAsrSelect();
   const c = document.getElementById('asr-list');
   if(!asrs.length){ c.innerHTML = '<div class="no-data">// Aún no guardaste ningún ASR</div>'; return; }
-  const bc = {Blue:'b-blue',Red:'b-red',Pink:'b-pink',White:'b-white',Black:'b-black',Green:'b-green'};
+  const bc = {Blue:'b-blue',Red:'b-red',Pink:'b-pink',White:'b-white',Black:'b-black',Green:'b-green',Otra:'b-otra'};
   const rc = {Win:'b-win',Loss:'b-loss',BE:'b-be',Open:'b-open'};
   const accColors = ['#4f9cf9','#a78bfa','#3ecf8e','#f59e0b','#f472b6','#22d3ee','#fb923c','#84cc16'];
   const accColorMap = {};
@@ -3473,7 +3514,7 @@ function exportCSV(){
     'Cuenta','Modo','Estrategia','Variante','Tipo','Dirección','Orden',
     'Activo','Mercado','Sesión',
     'Entrada','SL','TP','Salida','SL técnico','TP técnico',
-    'Fibonacci','Confirmaciones','Patrón','Gestión',
+    'Fibonacci','Confirmaciones','Patrón','Patrón velas','Gestión',
     'Capital inicial','Capital final','Riesgo $','Riesgo %',
     'RR Inicial','RR Final','B/P Bruto','Comisiones','B/P Neto',
     'Resultado','Lotaje','Link','Notas'
@@ -3515,6 +3556,7 @@ function exportCSV(){
       t.fibonacci || '',
       t.confirmaciones || '',
       t.patron || '',
+      t.candlesticks || '',
       Array.isArray(t.gestion) ? t.gestion.join(' | ') : (t.gestion || ''),
       t.capital || '',
       t.capitalFinal || '',
@@ -3591,6 +3633,7 @@ function importCSV(input){
         'fibonacci': 'fibonacci',
         'confirmaciones': 'confirmaciones',
         'patron': 'patron',
+        'patron_velas': 'candlesticks',
         'gestion': 'gestion',
         'capital_inicial': 'capital',
         'capital_final': 'capitalFinal',
