@@ -444,6 +444,7 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
     <div class="pill p-otra" onclick="selStrat(this,'Otra')">Otra</div>
   </div>
   <div id="variant-row" style="margin-top:10px"><div class="pills" id="variantPills"></div></div>
+  <div id="strat-note" class="asr-info" style="display:none;margin-top:12px;margin-bottom:0"></div>
 
   <div class="section-label">Tipo y dirección</div>
   <div class="form-grid g3">
@@ -595,7 +596,6 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
       <div class="pill p-conf" onclick="togPill(this)">Envolvente alcista</div>
       <div class="pill p-conf" onclick="togPill(this)">Envolvente bajista</div>
       <div class="pill p-conf" onclick="togPill(this)">Doji</div>
-      <div class="pill p-conf" onclick="togPill(this)">Martillo</div>
     </div>
   </div>
 
@@ -899,7 +899,6 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
         <div class="pill p-check-ok"  onclick="selChecklist(this,'ok')">✅ Respeté el checklist</div>
         <div class="pill p-check-no"  onclick="selChecklist(this,'no')">❌ Ignoré el checklist</div>
         <div class="pill p-check-nc"  onclick="selChecklist(this,'nc')">⚠️ Operé sin confirmación</div>
-        <div class="pill p-check-red" onclick="selChecklist(this,'red')">🔴 Operé en rojo</div>
       </div>
     </div>
     <div class="form-group">
@@ -1214,22 +1213,31 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
 <!-- INVESTIGACIÓN · stats auto + hipótesis y notas -->
 <div id="page-investigacion" class="page">
   <div class="page-title">Investigación</div>
-  <div class="page-sub">Estadísticas automáticas de tus ASR + hipótesis y notas que cargás a mano</div>
+  <div class="page-sub">Validar con datos las hipótesis del sistema antes de tocar el Trading Plan</div>
+
+  <div class="asr-info" style="margin-bottom:24px">
+    <div class="asr-info-title">Objetivo</div>
+    <p>Validar mediante datos objetivos las hipótesis del sistema antes de realizar cualquier modificación en el Trading Plan.</p>
+    <p style="margin-top:8px"><strong>Regla principal:</strong> NO modificar ninguna regla del Trading Plan hasta disponer de un mínimo de <strong>30 operaciones registradas</strong> del setup analizado.</p>
+  </div>
+
+  <div class="section-label">Gestión de la posición <span style="text-transform:none;letter-spacing:0;color:var(--text3);font-weight:400">· versión actual · editable</span></div>
+  <div id="inv-gestion-list" style="margin-bottom:24px"></div>
 
   <div class="section-label">Estadísticas por setup <span style="text-transform:none;letter-spacing:0;color:var(--text3);font-weight:400">· calculadas desde tus ASR + trades</span></div>
   <div class="tbl-wrap" style="margin-bottom:8px">
     <table id="inv-setup-tbl">
       <thead><tr>
-        <th>Setup</th><th>Trades</th><th>Win Rate</th><th>RR medio</th>
-        <th>Llegó 1+</th><th>Llegó 1.272+</th><th>Llegó 1.618+</th><th>Mejor variante</th>
+        <th>Setup</th><th>Trades</th><th>Muestra</th><th>Win Rate</th><th>RR medio</th>
+        <th>Llegó 1+</th><th>Llegó 1.272+</th><th>Llegó 1.618+</th>
       </tr></thead>
       <tbody></tbody>
     </table>
   </div>
-  <p class="mc-note" style="margin:0 0 8px">"Llegó X+" = % de ASR de ese setup donde la extensión registrada alcanzó ese nivel o más. Cargá la extensión en cada ASR para alimentar esta tabla.</p>
+  <p class="mc-note" style="margin:0 0 8px">"Muestra" = nº de operaciones del setup hacia las 30 mínimas para validar. "Llegó X+" = % de ASR donde la extensión registrada alcanzó ese nivel o más. Cargá la extensión en cada ASR para alimentar esto.</p>
 
   <div class="mc-card" id="inv-blue-card" style="margin-bottom:22px">
-    <div class="mc-qt" style="font-size:14px">Blue interna vs. Blue normal</div>
+    <div class="mc-qt" style="font-size:14px">Blue interna (dentro de Pink) vs. Blue normal</div>
     <div id="inv-blue-stats"></div>
   </div>
 
@@ -1240,7 +1248,7 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
   <div class="tbl-wrap" style="margin-bottom:22px">
     <table id="inv-hyp-tbl">
       <thead><tr>
-        <th style="min-width:200px">Hipótesis</th><th>Setup</th><th>Qué mido</th>
+        <th style="min-width:200px">Hipótesis</th><th>Setup</th><th>Validación (qué mido)</th>
         <th>Estado</th><th>Resultado / conclusión</th><th style="width:40px"></th>
       </tr></thead>
       <tbody></tbody>
@@ -1806,8 +1814,25 @@ function selStrat(el, s){
   el.className += ' on';
   curStrat = s;
   renderVariants();
+  renderStratNote(s);
   // GREEN tiene temporalidades distintas — refrescar grid de imágenes
   renderTfSlots();
+}
+
+const STRAT_NOTES = {
+  White: 'White perfecta: coincide con un <strong>Red en Scalping</strong>. Si la White se alinea con un setup Red en temporalidad de scalp, es la configuración óptima.'
+};
+function renderStratNote(s){
+  const box = document.getElementById('strat-note');
+  if(!box) return;
+  const note = STRAT_NOTES[s];
+  if(note){
+    box.innerHTML = '<div class="asr-info-title">Nota · ' + s + '</div><p>' + note + '</p>';
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+    box.innerHTML = '';
+  }
 }
 
 function renderVariants(){
@@ -1847,16 +1872,25 @@ const emaMap = {
 function getConfList(){
   const m = emaMap[curType] || emaMap.Day;
   return [
+    'S/R perfecto',
+    'Patrón diario perfecto',
+    'Tendencia clara',
+    'Contratendencia',
+    'Sobrecompra/sobreventa',
+    'Divergencia RSI',
+    'Divergencia MACD',
+    'Consolidación',
+    'Movimiento fuerte',
+    'Pullback EMA50 ' + m.tf4,
+    'Pullback EMA50 ' + m.tf1,
     'RCC estructura',
     'RCC EMA50 ' + m.tf1,
     'RCC EMA50 ' + m.tf4,
     'Cruce EMAs50',
     'EMAs50 separadas',
-    'Divergencia RSI',
-    'Divergencia MACD',
-    'Patrón diario perfecto',
-    'Contratendencia',
-    'S/R perfecto'
+    'Patrón con 3 toques',
+    'Desaceleración',
+    'Diagonal con 3 toques'
   ];
 }
 
@@ -1867,7 +1901,7 @@ function renderConfs(){
   c.innerHTML = '';
   const list = getConfList();
   // keys for stable mapping across timeframes
-  const keys = ['rcc_structure','rcc_ema_low','rcc_ema_high','cross_emas','emas_separated','div_rsi','div_macd','daily_pattern','contratrend','sr_perfect'];
+  const keys = ['sr_perfect','daily_pattern','trend_clear','contratrend','overbought_oversold','div_rsi','div_macd','consolidation','strong_move','pullback_ema_high','pullback_ema_low','rcc_structure','rcc_ema_low','rcc_ema_high','cross_emas','emas_separated','three_touch','deceleration','diagonal_three_touch'];
   list.forEach((label, i)=>{
     const d = document.createElement('div');
     d.className = 'pill p-conf' + (selectedSet.has(keys[i]) ? ' on' : '');
@@ -2383,6 +2417,7 @@ function editTrade(id){
   const stratPill = Array.from(document.querySelectorAll('#stratPills .pill')).find(p=>p.textContent===curStrat);
   if(stratPill) stratPill.classList.add('on');
   renderVariants();
+  renderStratNote(curStrat);
 
   // Variante
   curVariant = t.variante || '';
@@ -3751,7 +3786,63 @@ function docRender(type){
 // Parte manual (hipótesis + notas) persistida; parte automática calculada desde ASR/trades.
 const INV_SETUPS = ['Blue','Red','Pink','White','Black','Green'];
 const FIB_ORDER = ['No llegó a 1','1.0','1.272','1.414','1.618','2.0','2.618'];
+const INV_MIN_SAMPLE = 30; // mínimo de operaciones para validar un setup
 function fibRank(v){ const i = FIB_ORDER.indexOf(v); return i<0 ? -1 : i; }
+
+// Filas de la tabla de estadísticas: Blue separada en A/B/C como en el PDF
+const INV_STAT_ROWS = [
+  { label:'Black',   estrategia:'Black',  variante:null },
+  { label:'Blue A',  estrategia:'Blue',   variante:'Blue A' },
+  { label:'Blue B',  estrategia:'Blue',   variante:'Blue B' },
+  { label:'Blue C',  estrategia:'Blue',   variante:'Blue C' },
+  { label:'Red',     estrategia:'Red',    variante:null },
+  { label:'Pink',    estrategia:'Pink',   variante:null },
+  { label:'White',   estrategia:'White',  variante:null },
+  { label:'Green',   estrategia:'Green',  variante:null }
+];
+
+// Contenido inicial del documento (precargado del PDF, editable). Solo se siembra una vez.
+const INV_SEED_GESTION = [
+  { setup:'Black', color:'#e8edf2',
+    objetivo:'Capturar la posible Onda 1 contra la tendencia previa.',
+    gestion:'Riesgo inicial completo.\nBE tras ruptura del primer mínimo/máximo relevante de H1.\nMantener mientras respete estructura favorable.\nSalida en objetivo estructural o invalidación.',
+    hipotesis:'Reacción en EMA50 H1.\nLlegada a extensiones 1.272 y 1.618.' },
+  { setup:'Blue', color:'#4f9cf9',
+    objetivo:'Incorporación temprana a una posible Onda 3.',
+    gestion:'Riesgo inicial completo.\nBE tras confirmación estructural H1.\nMantener hasta objetivo estructural.\nNo cerrar por ruido de temporalidades inferiores.',
+    hipotesis:'Frecuencia de llegada a extensiones.\nDiferencias entre Blue A, B y C.' },
+  { setup:'Red', color:'#f05252',
+    objetivo:'Capturar continuación tras cambio de estructura H4.',
+    gestion:'Riesgo inicial completo.\nBE tras confirmación estructural.\nMantener hasta último máximo/mínimo relevante.\nNo limitar recorrido prematuramente.',
+    hipotesis:'Llegada a extensiones 1.272.\nLlegada a extensiones 1.618.' },
+  { setup:'Pink', color:'#f472b6',
+    objetivo:'Capturar Onda 5 o continuación de tendencia tras corrección compleja.',
+    gestion:'Riesgo inicial completo.\nBE al alcanzar RR2.\nMantener hasta objetivo estructural.\nNo intervenir manualmente salvo invalidación.',
+    hipotesis:'Frecuencia de llegada a extensiones.\nImpacto de Blue interna dentro de Pink.' }
+];
+const INV_SEED_HYPS = [
+  { hyp:'Blue A genera más BOS H4',                  setup:'Blue',  mide:'Nº BOS generados' },
+  { hyp:'Blue interna mejora Pink',                  setup:'Pink',  mide:'% TP alcanzados' },
+  { hyp:'EMA50 H1 frena Black',                      setup:'Black', mide:'Nº rechazos' },
+  { hyp:'Black llega menos a extensiones',           setup:'Black', mide:'% 1.272 y 1.618' },
+  { hyp:'Red desarrolla extensiones con frecuencia', setup:'Red',   mide:'% 1.272 y 1.618' },
+  { hyp:'Pink genera recorridos más amplios',        setup:'Pink',  mide:'% 1.272 y 1.618' },
+  { hyp:'EMA50 H4 mejora Pink',                      setup:'Pink',  mide:'Respeto EMA50 H4' },
+  { hyp:'Pullback Blue termina en 0.382-0.5',        setup:'Blue',  mide:'Zona de giro' }
+];
+const INV_SEED_OBS = [
+  'Blue interna dentro de Pink acelera el movimiento.',
+  'Las Pink alcanzan el TP sin necesidad de gestión activa.',
+  'Las Black suelen reaccionar en EMA50 H1.',
+  'Las Red desarrollan extensiones con mayor frecuencia.'
+];
+const INV_SEED_IDEAS = [
+  'Runner en Pink.',
+  'Runner en Red.',
+  'Parciales en Black.',
+  'Gestión basada en EMA50 H1.',
+  'Gestión basada en extensiones Fibonacci.'
+];
 
 function invLoad(){
   try{ return JSON.parse(localStorage.getItem('tj_investigacion')||'{}'); }catch(e){ return {}; }
@@ -3764,16 +3855,62 @@ function invState(){
   if(!Array.isArray(d.hyps)) d.hyps = [];
   if(!Array.isArray(d.obs)) d.obs = [];
   if(!Array.isArray(d.ideas)) d.ideas = [];
+  if(!Array.isArray(d.gestion)) d.gestion = [];
   return d;
 }
+// Siembra el contenido del PDF UNA sola vez, solo en instalación nueva.
+// Si ya existía la clave (de una versión anterior), no se toca nada.
+function invMaybeSeed(){
+  if(localStorage.getItem('tj_investigacion') !== null) return; // ya hay datos: no sembrar
+  const d = { _seeded:true,
+    gestion: INV_SEED_GESTION.map((g,i)=>({ id:Date.now()+i, ...g })),
+    hyps:    INV_SEED_HYPS.map((h,i)=>({ id:Date.now()+100+i, hyp:h.hyp, setup:h.setup, mide:h.mide, estado:'Abierta', resultado:'' })),
+    obs:     INV_SEED_OBS.map((t,i)=>({ id:Date.now()+200+i, text:t })),
+    ideas:   INV_SEED_IDEAS.map((t,i)=>({ id:Date.now()+300+i, text:t }))
+  };
+  invSave(d);
+}
 
-// --- Estadísticas automáticas por setup (usa trades + ASR vinculados) ---
+// --- Gestión de la posición por setup (editable) ---
+function invUpdGestion(id, field, val){
+  const d = invState();
+  const g = d.gestion.find(x=>x.id===id); if(!g) return;
+  g[field] = val; invSave(d);
+}
+function invAddGestion(){
+  const d = invState();
+  d.gestion.push({ id:Date.now(), setup:'Nuevo setup', color:'var(--accent)', objetivo:'', gestion:'', hipotesis:'' });
+  invSave(d); invRenderGestion();
+}
+function invDelGestion(id){
+  if(!confirm('¿Eliminar este bloque de gestión?')) return;
+  const d = invState(); d.gestion = d.gestion.filter(x=>x.id!==id); invSave(d); invRenderGestion();
+}
+function invRenderGestion(){
+  const cont = document.getElementById('inv-gestion-list');
+  if(!cont) return;
+  const d = invState();
+  const ta = (id, field, val, ph) => `<textarea onchange="invUpdGestion(${id},'${field}',this.value)" placeholder="${ph}" style="width:100%;min-height:84px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:8px 10px;font-family:inherit;font-size:13px;resize:vertical;line-height:1.5">${escapeHtml(val||'')}</textarea>`;
+  cont.innerHTML = d.gestion.map(g=>`<div class="mc-card" style="margin-bottom:12px;border-left:3px solid ${g.color||'var(--accent)'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
+      <input value="${escapeHtml(g.setup||'')}" onchange="invUpdGestion(${g.id},'setup',this.value)" style="font-weight:700;font-size:15px;background:transparent;border:none;border-bottom:1px solid transparent;color:${g.color||'var(--text)'};padding:2px 0;font-family:inherit" onfocus="this.style.borderBottomColor='var(--border2)'" onblur="this.style.borderBottomColor='transparent'">
+      <button class="del-btn" onclick="invDelGestion(${g.id})">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><div class="asr-card-block-title" style="margin-bottom:4px">Objetivo</div>${ta(g.id,'objetivo',g.objetivo,'Objetivo del setup…')}</div>
+      <div><div class="asr-card-block-title" style="margin-bottom:4px">Hipótesis a validar</div>${ta(g.id,'hipotesis',g.hipotesis,'Una por línea…')}</div>
+    </div>
+    <div style="margin-top:12px"><div class="asr-card-block-title" style="margin-bottom:4px">Gestión</div>${ta(g.id,'gestion',g.gestion,'Reglas de gestión, una por línea…')}</div>
+  </div>`).join('')
+  + `<button class="mc-btn ghost sm" style="padding:7px 14px;font-size:12px" onclick="invAddGestion()">+ Setup</button>`;
+}
+
+// --- Estadísticas automáticas por fila (setup o variante) + contador hacia 30 ---
 function invRenderSetupTable(){
   const tbody = document.querySelector('#inv-setup-tbl tbody');
   if(!tbody) return;
-  const closedTrades = trades.filter(t=>t.estrategia);
-  const rows = INV_SETUPS.map(setup=>{
-    const ts = closedTrades.filter(t=>t.estrategia===setup);
+  const rows = INV_STAT_ROWS.map(row=>{
+    const ts = trades.filter(t=> t.estrategia===row.estrategia && (row.variante ? t.variante===row.variante : true));
     const n = ts.length;
     const wins = ts.filter(t=>t.resultado==='Win').length;
     const losses = ts.filter(t=>t.resultado==='Loss').length;
@@ -3781,29 +3918,26 @@ function invRenderSetupTable(){
     const wr = closed ? Math.round(wins/closed*100) : null;
     const rrs = ts.map(t=>parseRR(t.rr)).filter(r=>!isNaN(r));
     const rrAvg = rrs.length ? (rrs.reduce((a,b)=>a+b,0)/rrs.length) : null;
-    // ASR de este setup con extensión cargada
-    const asrSetup = asrs.filter(a=>{ const t=trades.find(x=>x.id===a.tradeId); return t && t.estrategia===setup && a.fib; });
-    const nFib = asrSetup.length;
-    const pct = lvl => nFib ? Math.round(asrSetup.filter(a=>fibRank(a.fib)>=fibRank(lvl)).length / nFib * 100) : null;
+    // ASR de esta fila con extensión cargada
+    const asrRow = asrs.filter(a=>{ const t=trades.find(x=>x.id===a.tradeId); return t && t.estrategia===row.estrategia && (row.variante ? t.variante===row.variante : true) && a.fib; });
+    const nFib = asrRow.length;
+    const pct = lvl => nFib ? Math.round(asrRow.filter(a=>fibRank(a.fib)>=fibRank(lvl)).length / nFib * 100) : null;
     const p1 = pct('1.0'), p127 = pct('1.272'), p161 = pct('1.618');
-    // mejor variante por WR (entre trades con variante)
-    const varMap = {};
-    ts.forEach(t=>{ if(t.variante){ (varMap[t.variante]=varMap[t.variante]||[]).push(t); } });
-    let bestVar='—', bestWr=-1;
-    Object.keys(varMap).forEach(v=>{
-      const arr=varMap[v]; const w=arr.filter(x=>x.resultado==='Win').length; const c=arr.filter(x=>x.resultado==='Win'||x.resultado==='Loss').length;
-      if(c){ const r=w/c; if(r>bestWr){ bestWr=r; bestVar=v+' ('+Math.round(r*100)+'%)'; } }
-    });
     const cell = v => v===null ? '<span style="color:var(--text3)">—</span>' : v;
     const wrCell = wr===null ? '<span style="color:var(--text3)">—</span>' : `<span style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</span>`;
+    // contador hacia 30
+    const ready = n>=INV_MIN_SAMPLE;
+    const sampleCol = `<span style="color:${ready?'var(--green)':'var(--text2)'};font-family:'JetBrains Mono',monospace;font-size:11px" title="${ready?'Muestra suficiente para validar':'Faltan '+(INV_MIN_SAMPLE-n)+' para validar'}">${n}/${INV_MIN_SAMPLE}${ready?' ✓':''}</span>`;
+    const cls = 'b-'+row.estrategia.toLowerCase();
     return `<tr>
-      <td><span class="badge b-${setup.toLowerCase()}">${setup}</span></td>
-      <td>${n||0}</td><td>${wrCell}</td>
+      <td><span class="badge ${cls}">${row.label}</span></td>
+      <td>${n||0}</td>
+      <td>${sampleCol}</td>
+      <td>${wrCell}</td>
       <td>${rrAvg===null?'<span style="color:var(--text3)">—</span>':rrAvg.toFixed(2)+'R'}</td>
       <td>${cell(p1===null?null:p1+'%')}</td>
       <td>${cell(p127===null?null:p127+'%')}</td>
       <td>${cell(p161===null?null:p161+'%')}</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${bestVar}</td>
     </tr>`;
   }).join('');
   tbody.innerHTML = rows;
@@ -3901,6 +4035,8 @@ function invRenderNotes(kind){
 }
 
 function invRender(){
+  invMaybeSeed();
+  invRenderGestion();
   invRenderSetupTable();
   invRenderBlue();
   invRenderHyps();
@@ -4314,9 +4450,11 @@ function importData(input){
             // merge sin duplicar por id
             const merge = (a=[],b=[])=>{ const ids=new Set(a.map(x=>x.id)); return [...a, ...b.filter(x=>!ids.has(x.id))]; };
             invSave({
+              _seeded: true,
               hyps: merge(cur.hyps, incoming.hyps||[]),
               obs: merge(cur.obs, incoming.obs||[]),
-              ideas: merge(cur.ideas, incoming.ideas||[])
+              ideas: merge(cur.ideas, incoming.ideas||[]),
+              gestion: merge(cur.gestion||[], incoming.gestion||[])
             });
           }
           if(typeof invRender==='function' && document.getElementById('page-investigacion')?.classList.contains('active')) invRender();
@@ -4858,6 +4996,7 @@ async function initApp(){
   document.getElementById('asr-fecha').value = new Date().toISOString().slice(0,10);
   refreshAccountSelectors();
   renderVariants();
+  renderStratNote(curStrat);
   renderConfs();
   renderTfSlots();
   renderAsrList();
