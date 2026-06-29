@@ -376,6 +376,14 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
       Potencial
     </div>
+    <div class="nav-item" onclick="showPage('checklist',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Check list
+    </div>
+    <div class="nav-item" onclick="showPage('plan',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+      Trading plan
+    </div>
     <div class="nav-item" onclick="showPage('ayuda',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       Ayuda
@@ -1145,6 +1153,32 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
   </div>
 </div>
 
+<!-- CHECK LIST · PDFs por colega -->
+<div id="page-checklist" class="page">
+  <div class="page-title">Check list</div>
+  <div class="page-sub">Subí tu check list en PDF · cada quien guarda la suya en su propio dispositivo</div>
+  <div class="mc-card">
+    <div class="mc-qt" style="font-size:14px">Subir / actualizar check list</div>
+    <p class="mc-note" style="margin:2px 0 12px">Solo archivos PDF. Se guarda localmente en este navegador (no se comparte ni se sube a ningún servidor). Subir uno nuevo reemplaza al anterior. Máx. recomendado: 5 MB.</p>
+    <input id="cl-file" type="file" accept="application/pdf,.pdf" style="display:none" onchange="docUpload('checklist', this)">
+    <button class="mc-btn" onclick="document.getElementById('cl-file').click()" style="padding:9px 16px">⬆ Subir PDF</button>
+  </div>
+  <div id="cl-view" style="margin-top:14px"></div>
+</div>
+
+<!-- TRADING PLAN · PDFs por colega -->
+<div id="page-plan" class="page">
+  <div class="page-title">Trading plan</div>
+  <div class="page-sub">Subí tu trading plan en PDF · cada quien guarda el suyo en su propio dispositivo</div>
+  <div class="mc-card">
+    <div class="mc-qt" style="font-size:14px">Subir / actualizar trading plan</div>
+    <p class="mc-note" style="margin:2px 0 12px">Solo archivos PDF. Se guarda localmente en este navegador (no se comparte ni se sube a ningún servidor). Subir uno nuevo reemplaza al anterior. Máx. recomendado: 5 MB.</p>
+    <input id="tp-file" type="file" accept="application/pdf,.pdf" style="display:none" onchange="docUpload('plan', this)">
+    <button class="mc-btn" onclick="document.getElementById('tp-file').click()" style="padding:9px 16px">⬆ Subir PDF</button>
+  </div>
+  <div id="tp-view" style="margin-top:14px"></div>
+</div>
+
 <!-- AYUDA · Cómo usar la app -->
 <div id="page-ayuda" class="page">
   <div class="page-title">Ayuda · Cómo usar</div>
@@ -1638,6 +1672,8 @@ function showPage(id, el){
   if(id==='asr'){ refreshAsrSelect(); renderAsrList(); }
   if(id==='riesgo'){ if(typeof mcInitRiesgo==='function') mcInitRiesgo(); }
   if(id==='potencial'){ if(typeof ptInit==='function') ptInit(); }
+  if(id==='checklist') docRender('checklist');
+  if(id==='plan') docRender('plan');
   // En móvil, cerrar sidebar al navegar
   if(window.innerWidth <= 900){
     const sidebar = document.getElementById('sidebar');
@@ -3461,6 +3497,83 @@ async function checkAutoExport(){
   }
 }
 
+// ===== Documentos PDF (check list / trading plan) · locales en este dispositivo =====
+const DOC_CFG = {
+  checklist: { key:'tj_doc_checklist', label:'check list', viewId:'cl-view' },
+  plan:      { key:'tj_doc_plan',      label:'trading plan', viewId:'tp-view' }
+};
+function docGet(type){
+  try{ const raw=localStorage.getItem(DOC_CFG[type].key); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+function docUpload(type, input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  if(file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)){
+    alert('Solo se permiten archivos PDF.'); input.value=''; return;
+  }
+  if(file.size > 8*1024*1024){
+    if(!confirm('El archivo pesa '+(file.size/1048576).toFixed(1)+' MB. Los PDFs grandes pueden no entrar en el almacenamiento del navegador. ¿Subir igual?')){ input.value=''; return; }
+  }
+  const reader = new FileReader();
+  reader.onload = function(){
+    const rec = { name:file.name, size:file.size, data:reader.result, uploadedAt:new Date().toISOString() };
+    try{
+      localStorage.setItem(DOC_CFG[type].key, JSON.stringify(rec));
+      showToast('PDF guardado · '+DOC_CFG[type].label);
+      docRender(type);
+    }catch(e){
+      alert('No se pudo guardar: el archivo es demasiado grande para el almacenamiento del navegador. Probá con un PDF más liviano (menos de 5 MB).');
+    }
+    input.value='';
+  };
+  reader.onerror = function(){ alert('Error al leer el archivo.'); input.value=''; };
+  reader.readAsDataURL(file);
+}
+function docOpen(type){
+  const rec = docGet(type); if(!rec) return;
+  const w = window.open(); 
+  if(w){ w.document.write('<iframe src="'+rec.data+'" style="border:0;width:100%;height:100vh" title="'+rec.name+'"></iframe><title>'+rec.name+'</title>'); w.document.close(); }
+  else alert('El navegador bloqueó la ventana. Permití las ventanas emergentes o usá Descargar.');
+}
+function docDownload(type){
+  const rec = docGet(type); if(!rec) return;
+  const a = document.createElement('a'); a.href=rec.data; a.download=rec.name; a.click();
+}
+function docDelete(type){
+  const rec = docGet(type); if(!rec) return;
+  if(!confirm('¿Borrar el '+DOC_CFG[type].label+' guardado? No se puede deshacer.')) return;
+  localStorage.removeItem(DOC_CFG[type].key);
+  showToast('PDF eliminado · '+DOC_CFG[type].label);
+  docRender(type);
+}
+function docRender(type){
+  const cfg = DOC_CFG[type];
+  const cont = document.getElementById(cfg.viewId);
+  if(!cont) return;
+  const rec = docGet(type);
+  if(!rec){
+    cont.innerHTML = '<div class="mc-card" style="text-align:center;color:var(--text3);padding:30px 20px">Todavía no subiste ningún PDF.</div>';
+    return;
+  }
+  const sz = rec.size ? (rec.size/1024>=1024 ? (rec.size/1048576).toFixed(1)+' MB' : Math.round(rec.size/1024)+' KB') : '';
+  const fecha = rec.uploadedAt ? new Date(rec.uploadedAt).toLocaleString() : '';
+  cont.innerHTML =
+    '<div class="mc-card">'
+    + '<div class="mc-qt" style="font-size:14px">PDF guardado</div>'
+    + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px">'
+    +   '<span style="font-size:22px">📄</span>'
+    +   '<div style="min-width:0"><div style="font-weight:600;word-break:break-all">'+rec.name.replace(/</g,'&lt;')+'</div>'
+    +   '<div class="mc-note" style="margin:0">'+sz+(fecha?(' · subido '+fecha):'')+'</div></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +   '<button class="mc-btn" onclick="docOpen(\''+type+'\')" style="padding:8px 14px;font-size:12px">👁 Ver</button>'
+    +   '<button class="mc-btn ghost sm" onclick="docDownload(\''+type+'\')" style="padding:8px 14px;font-size:12px">⬇ Descargar</button>'
+    +   '<button class="mc-btn ghost sm" onclick="docDelete(\''+type+'\')" style="padding:8px 14px;font-size:12px;color:var(--red,#e5484d);border-color:var(--red,#e5484d)">🗑 Borrar</button>'
+    + '</div>'
+    + '<iframe src="'+rec.data+'" style="border:1px solid var(--border);border-radius:var(--radius);width:100%;height:520px;margin-top:14px;background:#fff" title="'+rec.name.replace(/"/g,'')+'"></iframe>'
+    + '</div>';
+}
+
 function autoExportJSON(){
   const payload = {
     version: 3,
@@ -3496,7 +3609,8 @@ function exportData(){
     accounts,
     movements,
     activeAccountId,
-    traderName: localStorage.getItem('tj_trader_name') || ''
+    traderName: localStorage.getItem('tj_trader_name') || '',
+    docs: { checklist: docGet('checklist'), plan: docGet('plan') }
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
@@ -3832,6 +3946,19 @@ function importData(input){
       saveAccounts();
       saveMovements();
       saveActiveAccount();
+      // Restaurar documentos PDF (check list / trading plan) si vienen en el respaldo
+      if(data && data.docs){
+        try{
+          if(action==='replace'){
+            if(data.docs.checklist) localStorage.setItem('tj_doc_checklist', JSON.stringify(data.docs.checklist));
+            if(data.docs.plan) localStorage.setItem('tj_doc_plan', JSON.stringify(data.docs.plan));
+          } else {
+            if(data.docs.checklist && !docGet('checklist')) localStorage.setItem('tj_doc_checklist', JSON.stringify(data.docs.checklist));
+            if(data.docs.plan && !docGet('plan')) localStorage.setItem('tj_doc_plan', JSON.stringify(data.docs.plan));
+          }
+          if(typeof docRender==='function'){ docRender('checklist'); docRender('plan'); }
+        }catch(e){}
+      }
       refreshAccountSelectors();
       renderTable();
       renderAsrList();
