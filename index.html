@@ -131,6 +131,7 @@ textarea{resize:vertical;min-height:68px;line-height:1.5}
 .p-black.on{background:#1a1e24;border-color:#e8edf2;color:#e8edf2}
 .p-green.on{background:#0d2a1a;border-color:#3ecf8e;color:#3ecf8e}
 .p-otra.on{background:#2e2410;border-color:#f59e0b;color:#f59e0b}
+.p-fib.on{background:var(--accent2);border-color:var(--accent);color:var(--accent)}
 .p-long.on{background:var(--green2);border-color:var(--green);color:var(--green)}
 .p-short.on{background:var(--red2);border-color:var(--red);color:var(--red)}
 .p-win.on{background:var(--green2);border-color:var(--green);color:var(--green)}
@@ -375,6 +376,10 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
     <div class="nav-item" onclick="showPage('potencial',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
       Potencial
+    </div>
+    <div class="nav-item" onclick="showPage('investigacion',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Investigación
     </div>
     <div class="nav-item" onclick="showPage('checklist',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -898,16 +903,69 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
       </div>
     </div>
     <div class="form-group">
-      <label>Captura del checklist (opcional)</label>
-      <div class="img-zone" id="asr-check-zone" onclick="document.getElementById('asr-check-input').click()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span>Clic, pegá o arrastrá imagen</span>
+      <label>Captura del checklist (opcional · hasta 3)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div>
+          <div class="img-zone" id="asr-check-zone" onclick="document.getElementById('asr-check-input').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Imagen 1</span>
+          </div>
+          <input type="file" id="asr-check-input" accept="image/*" style="display:none" onchange="handleAsrImg(this,'check')">
+          <div id="asr-check-preview" style="display:none;margin-top:8px;position:relative">
+            <img style="width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:200px;object-fit:cover">
+            <button onclick="clearAsrImg('check')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.85);border:none;color:#fff;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:12px">Quitar</button>
+          </div>
+        </div>
+        <div>
+          <div class="img-zone" id="asr-check2-zone" onclick="document.getElementById('asr-check2-input').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Imagen 2</span>
+          </div>
+          <input type="file" id="asr-check2-input" accept="image/*" style="display:none" onchange="handleAsrImg(this,'check2')">
+          <div id="asr-check2-preview" style="display:none;margin-top:8px;position:relative">
+            <img style="width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:200px;object-fit:cover">
+            <button onclick="clearAsrImg('check2')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.85);border:none;color:#fff;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:12px">Quitar</button>
+          </div>
+        </div>
+        <div>
+          <div class="img-zone" id="asr-check3-zone" onclick="document.getElementById('asr-check3-input').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Imagen 3</span>
+          </div>
+          <input type="file" id="asr-check3-input" accept="image/*" style="display:none" onchange="handleAsrImg(this,'check3')">
+          <div id="asr-check3-preview" style="display:none;margin-top:8px;position:relative">
+            <img style="width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:200px;object-fit:cover">
+            <button onclick="clearAsrImg('check3')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.85);border:none;color:#fff;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:12px">Quitar</button>
+          </div>
+        </div>
       </div>
-      <input type="file" id="asr-check-input" accept="image/*" style="display:none" onchange="handleAsrImg(this,'check')">
-      <div id="asr-check-preview" style="display:none;margin-top:8px;position:relative">
-        <img style="width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:200px;object-fit:cover">
-        <button onclick="clearAsrImg('check')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.85);border:none;color:#fff;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:12px">Quitar</button>
+    </div>
+  </div>
+
+  <div class="section-label">Extensión de Fibonacci y variante</div>
+  <div class="form-grid g2" style="align-items:start;margin-bottom:14px">
+    <div class="form-group">
+      <label>¿Hasta qué extensión llegó el precio?</label>
+      <div class="pills" id="fibPills">
+        <div class="pill p-fib" onclick="selFib(this,'No llegó a 1')">No llegó a 1</div>
+        <div class="pill p-fib" onclick="selFib(this,'1.0')">1.0</div>
+        <div class="pill p-fib" onclick="selFib(this,'1.272')">1.272</div>
+        <div class="pill p-fib" onclick="selFib(this,'1.414')">1.414</div>
+        <div class="pill p-fib" onclick="selFib(this,'1.618')">1.618</div>
+        <div class="pill p-fib" onclick="selFib(this,'2.0')">2.0</div>
+        <div class="pill p-fib" onclick="selFib(this,'2.618')">2.618</div>
       </div>
+      <textarea id="asr-fib-text" placeholder="Detalle del recorrido / hasta dónde alargó con seguridad (opcional)…" style="margin-top:8px;min-height:50px"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Variante del setup <span style="text-transform:none;letter-spacing:0;color:var(--text3);font-weight:400">· según la estrategia</span></label>
+      <div class="pills" id="fibVarPills">
+        <div class="pill p-fib" onclick="selFibVar(this,'A')">Blue A</div>
+        <div class="pill p-fib" onclick="selFibVar(this,'B')">Blue B</div>
+        <div class="pill p-fib" onclick="selFibVar(this,'C')">Blue C</div>
+      </div>
+      <label style="margin-top:12px"><input type="checkbox" id="asr-blue-interna" style="width:auto;margin-right:7px;vertical-align:middle"> Blue interna (dentro de una Pink)</label>
+      <p class="mc-note" style="margin-top:6px">Marcalo solo si el setup es Blue y está operada dentro de una Pink. Suma a las estadísticas de Investigación.</p>
     </div>
   </div>
 
@@ -1153,14 +1211,65 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
   </div>
 </div>
 
+<!-- INVESTIGACIÓN · stats auto + hipótesis y notas -->
+<div id="page-investigacion" class="page">
+  <div class="page-title">Investigación</div>
+  <div class="page-sub">Estadísticas automáticas de tus ASR + hipótesis y notas que cargás a mano</div>
+
+  <div class="section-label">Estadísticas por setup <span style="text-transform:none;letter-spacing:0;color:var(--text3);font-weight:400">· calculadas desde tus ASR + trades</span></div>
+  <div class="tbl-wrap" style="margin-bottom:8px">
+    <table id="inv-setup-tbl">
+      <thead><tr>
+        <th>Setup</th><th>Trades</th><th>Win Rate</th><th>RR medio</th>
+        <th>Llegó 1+</th><th>Llegó 1.272+</th><th>Llegó 1.618+</th><th>Mejor variante</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="mc-note" style="margin:0 0 8px">"Llegó X+" = % de ASR de ese setup donde la extensión registrada alcanzó ese nivel o más. Cargá la extensión en cada ASR para alimentar esta tabla.</p>
+
+  <div class="mc-card" id="inv-blue-card" style="margin-bottom:22px">
+    <div class="mc-qt" style="font-size:14px">Blue interna vs. Blue normal</div>
+    <div id="inv-blue-stats"></div>
+  </div>
+
+  <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Validación de hipótesis</span>
+    <button class="mc-btn ghost sm" style="padding:6px 12px;font-size:12px;text-transform:none;letter-spacing:0" onclick="invAddHyp()">+ Hipótesis</button>
+  </div>
+  <div class="tbl-wrap" style="margin-bottom:22px">
+    <table id="inv-hyp-tbl">
+      <thead><tr>
+        <th style="min-width:200px">Hipótesis</th><th>Setup</th><th>Qué mido</th>
+        <th>Estado</th><th>Resultado / conclusión</th><th style="width:40px"></th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Observaciones del mercado</span>
+    <button class="mc-btn ghost sm" style="padding:6px 12px;font-size:12px;text-transform:none;letter-spacing:0" onclick="invAddNote('obs')">+ Observación</button>
+  </div>
+  <p class="mc-note" style="margin:0 0 8px">Registrá solo observaciones repetitivas que aparezcan en múltiples operaciones.</p>
+  <div id="inv-obs-list" style="margin-bottom:22px"></div>
+
+  <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Ideas futuras <span style="text-transform:none;letter-spacing:0;color:var(--text3);font-weight:400">· no implementadas</span></span>
+    <button class="mc-btn ghost sm" style="padding:6px 12px;font-size:12px;text-transform:none;letter-spacing:0" onclick="invAddNote('idea')">+ Idea</button>
+  </div>
+  <p class="mc-note" style="margin:0 0 8px">Posibles mejoras sin tocar el Trading Plan. Solo se incorporan tras validación estadística suficiente.</p>
+  <div id="inv-idea-list"></div>
+</div>
+
 <!-- CHECK LIST · PDFs por colega -->
 <div id="page-checklist" class="page">
   <div class="page-title">Check list</div>
   <div class="page-sub">Subí tu check list en PDF · cada quien guarda la suya en su propio dispositivo</div>
   <div class="mc-card">
-    <div class="mc-qt" style="font-size:14px">Subir / actualizar check list</div>
-    <p class="mc-note" style="margin:2px 0 12px">Solo archivos PDF. Se guarda localmente en este navegador (no se comparte ni se sube a ningún servidor). Subir uno nuevo reemplaza al anterior. Máx. recomendado: 5 MB.</p>
-    <input id="cl-file" type="file" accept="application/pdf,.pdf" style="display:none" onchange="docUpload('checklist', this)">
+    <div class="mc-qt" style="font-size:14px">Subir check list (hasta 7 PDF)</div>
+    <p class="mc-note" style="margin:2px 0 12px">Solo archivos PDF. Se guardan localmente en este navegador (no se comparten ni se suben a ningún servidor). Podés subir hasta 7. Máx. recomendado por archivo: 5 MB.</p>
+    <input id="cl-file" type="file" accept="application/pdf,.pdf" multiple style="display:none" onchange="docUpload('checklist', this)">
     <button class="mc-btn" onclick="document.getElementById('cl-file').click()" style="padding:9px 16px">⬆ Subir PDF</button>
   </div>
   <div id="cl-view" style="margin-top:14px"></div>
@@ -1674,6 +1783,7 @@ function showPage(id, el){
   if(id==='potencial'){ if(typeof ptInit==='function') ptInit(); }
   if(id==='checklist') docRender('checklist');
   if(id==='plan') docRender('plan');
+  if(id==='investigacion') invRender();
   // En móvil, cerrar sidebar al navegar
   if(window.innerWidth <= 900){
     const sidebar = document.getElementById('sidebar');
@@ -3189,8 +3299,8 @@ function deleteMovement(id){
 }
 
 // ===== ASR por trade =====
-let asrState = { htfltf:'', strat:'', sl:'', tp:'', again:'', checklist:'' };
-let asrImgThem = '', asrImgNow = '', asrImgGest = '', asrImgCheck = '';
+let asrState = { htfltf:'', strat:'', sl:'', tp:'', again:'', checklist:'', fib:'', fibVar:'' };
+let asrImgs = { them:'', now:'', gest:'', check:'', check2:'', check3:'' };
 let asrErrors = [];
 let asrMoods = [];
 
@@ -3213,6 +3323,17 @@ function selAsrYN(el, key, val){
   if(el.classList.contains('on')){ el.classList.remove('on'); asrState[key]=''; return; }
   group.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
   el.classList.add('on'); asrState[key] = val;
+}
+
+function selFib(el, val){
+  if(el.classList.contains('on')){ el.classList.remove('on'); asrState.fib=''; return; }
+  document.querySelectorAll('#fibPills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on'); asrState.fib = val;
+}
+function selFibVar(el, val){
+  if(el.classList.contains('on')){ el.classList.remove('on'); asrState.fibVar=''; return; }
+  document.querySelectorAll('#fibVarPills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on'); asrState.fibVar = val;
 }
 
 function refreshAsrSelect(){
@@ -3255,16 +3376,14 @@ async function handleAsrImg(input, kind){
   if(!file) return;
   try {
     const dataUrl = await compressImage(file);
-    if(kind==='them'){ asrImgThem = dataUrl; renderAsrImg('them'); }
-    else if(kind==='now'){ asrImgNow = dataUrl; renderAsrImg('now'); }
-    else if(kind==='gest'){ asrImgGest = dataUrl; renderAsrImg('gest'); }
-    else if(kind==='check'){ asrImgCheck = dataUrl; renderAsrImg('check'); }
+    asrImgs[kind] = dataUrl;
+    renderAsrImg(kind);
   } catch(e){}
   input.value = '';
 }
 
 function renderAsrImg(kind){
-  const src = kind==='them' ? asrImgThem : (kind==='now' ? asrImgNow : (kind==='gest' ? asrImgGest : asrImgCheck));
+  const src = asrImgs[kind] || '';
   const zone = document.getElementById('asr-'+kind+'-zone');
   const prev = document.getElementById('asr-'+kind+'-preview');
   if(!zone||!prev) return;
@@ -3279,15 +3398,12 @@ function renderAsrImg(kind){
 }
 
 function clearAsrImg(kind){
-  if(kind==='them') asrImgThem = '';
-  else if(kind==='now') asrImgNow = '';
-  else if(kind==='gest') asrImgGest = '';
-  else if(kind==='check') asrImgCheck = '';
+  asrImgs[kind] = '';
   renderAsrImg(kind);
 }
 
-// Drag & drop en zonas SS THEM / SS NOW / Gestión
-['them','now','gest','check'].forEach(kind=>{
+// Drag & drop en zonas SS THEM / SS NOW / Gestión / Checklist (3)
+['them','now','gest','check','check2','check3'].forEach(kind=>{
   const zone = document.getElementById('asr-'+kind+'-zone');
   if(!zone) return;
   ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('dragover')}));
@@ -3297,10 +3413,7 @@ function clearAsrImg(kind){
     if(!f||!f.type.startsWith('image/')) return;
     try {
       const d=await compressImage(f);
-      if(kind==='them') asrImgThem=d;
-      else if(kind==='now') asrImgNow=d;
-      else if(kind==='gest') asrImgGest=d;
-      else if(kind==='check') asrImgCheck=d;
+      asrImgs[kind]=d;
       renderAsrImg(kind);
     } catch(e){}
   });
@@ -3313,7 +3426,7 @@ function addAsr(){
     id: editingAsrId || Date.now(),
     tradeId: parseInt(tradeId),
     fecha: document.getElementById('asr-fecha').value || new Date().toISOString().slice(0,10),
-    imgThem: asrImgThem, imgNow: asrImgNow, imgGest: asrImgGest, imgCheck: asrImgCheck,
+    imgThem: asrImgs.them, imgNow: asrImgs.now, imgGest: asrImgs.gest, imgCheck: asrImgs.check, imgCheck2: asrImgs.check2, imgCheck3: asrImgs.check3,
     errors: asrErrors.slice(),
     moods: asrMoods.slice(),
     gestion: document.getElementById('asr-gestion').value,
@@ -3326,6 +3439,9 @@ function addAsr(){
     emoDurante: document.getElementById('asr-emo-durante').value,
     emoDespues: document.getElementById('asr-emo-despues').value,
     again: asrState.again,
+    fib: asrState.fib, fibText: document.getElementById('asr-fib-text').value,
+    fibVar: asrState.fibVar,
+    blueInterna: document.getElementById('asr-blue-interna').checked,
     lecciones: document.getElementById('asr-lecciones').value
   };
   if(editingAsrId){
@@ -3341,18 +3457,20 @@ function addAsr(){
 
 function resetAsrForm(){
   ['asr-gestion','asr-htfltf-text','asr-strat-text','asr-sl-text','asr-tp-text',
-   'asr-emo-antes','asr-emo-durante','asr-emo-despues','asr-lecciones'].forEach(id=>{
+   'asr-emo-antes','asr-emo-durante','asr-emo-despues','asr-lecciones','asr-fib-text'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  const biEl=document.getElementById('asr-blue-interna'); if(biEl) biEl.checked=false;
+  document.querySelectorAll('#fibPills .pill, #fibVarPills .pill').forEach(p=>p.classList.remove('on'));
   document.getElementById('asr-trade-link').value = '';
   document.getElementById('asr-trade-preview').style.display = 'none';
   document.querySelectorAll('#page-asr .p-asr-yn').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('#checklistPills .pill').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('#asrErrorPills .pill, #asrMentalPills .pill').forEach(p=>p.classList.remove('on'));
   asrErrors = []; asrMoods = [];
-  asrState = { htfltf:'', strat:'', sl:'', tp:'', again:'', checklist:'' };
-  asrImgThem = ''; asrImgNow = ''; asrImgGest = ''; asrImgCheck = '';
-  renderAsrImg('them'); renderAsrImg('now'); renderAsrImg('gest'); renderAsrImg('check');
+  asrState = { htfltf:'', strat:'', sl:'', tp:'', again:'', checklist:'', fib:'', fibVar:'' };
+  asrImgs = { them:'', now:'', gest:'', check:'', check2:'', check3:'' };
+  renderAsrImg('them'); renderAsrImg('now'); renderAsrImg('gest'); renderAsrImg('check'); renderAsrImg('check2'); renderAsrImg('check3');
   editingAsrId = null;
   document.getElementById('asr-btn-save').textContent = 'Guardar ASR →';
   document.getElementById('asr-fecha').value = new Date().toISOString().slice(0,10);
@@ -3375,7 +3493,11 @@ function editAsr(id){
   document.getElementById('asr-emo-durante').value = a.emoDurante||'';
   document.getElementById('asr-emo-despues').value = a.emoDespues||'';
   document.getElementById('asr-lecciones').value = a.lecciones||'';
-  asrState = { htfltf:a.htfltf||'', strat:a.strat||'', sl:a.sl||'', tp:a.tp||'', again:a.again||'', checklist:a.checklist||'' };
+  document.getElementById('asr-fib-text').value = a.fibText||'';
+  document.getElementById('asr-blue-interna').checked = !!a.blueInterna;
+  asrState = { htfltf:a.htfltf||'', strat:a.strat||'', sl:a.sl||'', tp:a.tp||'', again:a.again||'', checklist:a.checklist||'', fib:a.fib||'', fibVar:a.fibVar||'' };
+  document.querySelectorAll('#fibPills .pill').forEach(p=>p.classList.toggle('on', p.textContent===a.fib));
+  document.querySelectorAll('#fibVarPills .pill').forEach(p=>p.classList.toggle('on', p.textContent.endsWith(a.fibVar||'\u0000') && (a.fibVar||'')!==''));
   // Restaurar pill del checklist
   document.querySelectorAll('#checklistPills .pill').forEach(p=>p.classList.remove('on'));
   if(asrState.checklist){
@@ -3388,12 +3510,12 @@ function editAsr(id){
       p.classList.toggle('on', p.textContent===asrState[k] || (k==='again'&&asrState[k]==='Sí'&&p.textContent.startsWith('Sí')));
     });
   });
-  asrImgThem = a.imgThem||''; asrImgNow = a.imgNow||''; asrImgGest = a.imgGest||''; asrImgCheck = a.imgCheck||'';
+  asrImgs = { them:a.imgThem||'', now:a.imgNow||'', gest:a.imgGest||'', check:a.imgCheck||'', check2:a.imgCheck2||'', check3:a.imgCheck3||'' };
   asrErrors = Array.isArray(a.errors) ? a.errors.slice() : [];
   asrMoods = Array.isArray(a.moods) ? a.moods.slice() : [];
   document.querySelectorAll('#asrErrorPills .pill').forEach(p=>p.classList.toggle('on', asrErrors.includes(p.textContent)));
   document.querySelectorAll('#asrMentalPills .pill').forEach(p=>p.classList.toggle('on', asrMoods.includes(p.textContent)));
-  renderAsrImg('them'); renderAsrImg('now'); renderAsrImg('gest'); renderAsrImg('check');
+  renderAsrImg('them'); renderAsrImg('now'); renderAsrImg('gest'); renderAsrImg('check'); renderAsrImg('check2'); renderAsrImg('check3');
   document.getElementById('asr-btn-save').textContent = 'Guardar cambios →';
   document.querySelector('.main').scrollTop = 0;
 }
@@ -3450,9 +3572,11 @@ function renderAsrList(){
         <div class="asr-card-block-title">Estado mental</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px">${a.moods.map(m=>`<span class="asr-rating">${escapeHtml(m)}</span>`).join('')}</div>
       </div>` : ''}
-      ${a.imgCheck ? `<div class="asr-card-block">
-        <div class="asr-card-block-title">Checklist (captura)</div>
-        <img src="${a.imgCheck}" onclick="showImageOverlay('${a.imgCheck.replace(/'/g,"\\'")}')" style="max-width:280px;border-radius:var(--radius);border:1px solid var(--border);cursor:zoom-in;max-height:180px;object-fit:cover;display:block">
+      ${(a.imgCheck||a.imgCheck2||a.imgCheck3) ? `<div class="asr-card-block">
+        <div class="asr-card-block-title">Checklist (capturas)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${[a.imgCheck,a.imgCheck2,a.imgCheck3].filter(Boolean).map(img=>`<img src="${img}" onclick="showImageOverlay('${img.replace(/'/g,"\\'")}')" style="max-width:200px;border-radius:var(--radius);border:1px solid var(--border);cursor:zoom-in;max-height:180px;object-fit:cover;display:block">`).join('')}
+        </div>
       </div>` : ''}
       ${a.gestion || a.imgGest ? `<div class="asr-card-block">
         <div class="asr-card-block-title">Gestión durante el trade</div>
@@ -3467,6 +3591,15 @@ function renderAsrList(){
         ${yn('SL correcto', a.sl, a.slText)}
         ${yn('TP correcto', a.tp, a.tpText)}
       </div>
+      ${(a.fib || a.fibVar || a.blueInterna || a.fibText) ? `<div class="asr-card-block">
+        <div class="asr-card-block-title">Extensión Fibonacci / variante</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:${a.fibText?'6px':'0'}">
+          ${a.fib?`<span class="asr-rating" style="color:var(--accent);border-color:var(--accent)">📐 Llegó a ${escapeHtml(a.fib)}</span>`:''}
+          ${a.fibVar?`<span class="asr-rating">Variante ${escapeHtml(a.fibVar)}</span>`:''}
+          ${a.blueInterna?`<span class="asr-rating" style="color:#4f9cf9;border-color:#4f9cf9">Blue interna</span>`:''}
+        </div>
+        ${a.fibText?`<div class="asr-card-block-text">${escapeHtml(a.fibText)}</div>`:''}
+      </div>` : ''}
       <div class="asr-card-grid" style="grid-template-columns:1fr 1fr 1fr">
         ${block('Emoción antes', a.emoAntes)}
         ${block('Emoción durante', a.emoDurante)}
@@ -3499,50 +3632,89 @@ async function checkAutoExport(){
 
 // ===== Documentos PDF (check list / trading plan) · locales en este dispositivo =====
 const DOC_CFG = {
-  checklist: { key:'tj_doc_checklist', label:'check list', viewId:'cl-view' },
-  plan:      { key:'tj_doc_plan',      label:'trading plan', viewId:'tp-view' }
+  checklist: { key:'tj_doc_checklist', label:'check list',   viewId:'cl-view', max:7 },
+  plan:      { key:'tj_doc_plan',      label:'trading plan', viewId:'tp-view', max:1 }
 };
+// Devuelve SIEMPRE un array de registros. Migra formato viejo (objeto único) a array.
+function docGetList(type){
+  try{
+    const raw = localStorage.getItem(DOC_CFG[type].key);
+    if(!raw) return [];
+    const parsed = JSON.parse(raw);
+    if(Array.isArray(parsed)) return parsed;
+    if(parsed && parsed.data) return [parsed]; // formato viejo: un solo objeto
+    return [];
+  }catch(e){ return []; }
+}
+function docSaveList(type, list){
+  localStorage.setItem(DOC_CFG[type].key, JSON.stringify(list)); // puede tirar QuotaExceeded; lo maneja el caller
+}
+// Compat: docGet sigue existiendo y devuelve el primer registro (lo usan export/import viejos)
 function docGet(type){
-  try{ const raw=localStorage.getItem(DOC_CFG[type].key); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+  const list = docGetList(type);
+  return list.length ? list[0] : null;
 }
 function docUpload(type, input){
-  const file = input.files && input.files[0];
-  if(!file) return;
-  if(file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)){
-    alert('Solo se permiten archivos PDF.'); input.value=''; return;
+  const files = input.files ? Array.from(input.files) : [];
+  if(!files.length) return;
+  const cfg = DOC_CFG[type];
+  let list = docGetList(type);
+  const space = cfg.max - list.length;
+  if(space <= 0){
+    alert('Ya alcanzaste el máximo de '+cfg.max+' archivo(s) en '+cfg.label+'. Borrá alguno para subir otro.');
+    input.value=''; return;
   }
-  if(file.size > 8*1024*1024){
-    if(!confirm('El archivo pesa '+(file.size/1048576).toFixed(1)+' MB. Los PDFs grandes pueden no entrar en el almacenamiento del navegador. ¿Subir igual?')){ input.value=''; return; }
+  // Validar todos como PDF
+  const valid = files.filter(f => f.type==='application/pdf' || /\.pdf$/i.test(f.name));
+  if(valid.length !== files.length){
+    alert('Solo se permiten archivos PDF. Se ignoraron los que no lo eran.');
   }
-  const reader = new FileReader();
-  reader.onload = function(){
-    const rec = { name:file.name, size:file.size, data:reader.result, uploadedAt:new Date().toISOString() };
+  let toAdd = valid.slice(0, space);
+  if(valid.length > space){
+    alert('Solo entran '+space+' archivo(s) más (máximo '+cfg.max+'). Se subirán los primeros '+space+'.');
+  }
+  const big = toAdd.find(f => f.size > 8*1024*1024);
+  if(big && !confirm('Algún archivo pesa más de 8 MB. Los PDFs grandes pueden no entrar en el almacenamiento del navegador. ¿Subir igual?')){
+    input.value=''; return;
+  }
+  // Leer secuencialmente todos los archivos y luego guardar una sola vez
+  let pending = toAdd.length, added = 0;
+  toAdd.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = function(){
+      list.push({ id:Date.now()+'_'+Math.random().toString(36).slice(2,7), name:file.name, size:file.size, data:reader.result, uploadedAt:new Date().toISOString() });
+      added++;
+      if(--pending === 0) finish();
+    };
+    reader.onerror = function(){ if(--pending === 0) finish(); };
+    reader.readAsDataURL(file);
+  });
+  function finish(){
     try{
-      localStorage.setItem(DOC_CFG[type].key, JSON.stringify(rec));
-      showToast('PDF guardado · '+DOC_CFG[type].label);
-      docRender(type);
+      docSaveList(type, list);
+      showToast(added===1 ? 'PDF guardado · '+cfg.label : added+' PDF guardados · '+cfg.label);
     }catch(e){
-      alert('No se pudo guardar: el archivo es demasiado grande para el almacenamiento del navegador. Probá con un PDF más liviano (menos de 5 MB).');
+      alert('No se pudo guardar: el almacenamiento del navegador está lleno. Probá con PDFs más livianos o borrá alguno.');
     }
+    docRender(type);
     input.value='';
-  };
-  reader.onerror = function(){ alert('Error al leer el archivo.'); input.value=''; };
-  reader.readAsDataURL(file);
+  }
 }
-function docOpen(type){
-  const rec = docGet(type); if(!rec) return;
-  const w = window.open(); 
+function docOpen(type, idx){
+  const list = docGetList(type); const rec = list[idx]; if(!rec) return;
+  const w = window.open();
   if(w){ w.document.write('<iframe src="'+rec.data+'" style="border:0;width:100%;height:100vh" title="'+rec.name+'"></iframe><title>'+rec.name+'</title>'); w.document.close(); }
   else alert('El navegador bloqueó la ventana. Permití las ventanas emergentes o usá Descargar.');
 }
-function docDownload(type){
-  const rec = docGet(type); if(!rec) return;
+function docDownload(type, idx){
+  const list = docGetList(type); const rec = list[idx]; if(!rec) return;
   const a = document.createElement('a'); a.href=rec.data; a.download=rec.name; a.click();
 }
-function docDelete(type){
-  const rec = docGet(type); if(!rec) return;
-  if(!confirm('¿Borrar el '+DOC_CFG[type].label+' guardado? No se puede deshacer.')) return;
-  localStorage.removeItem(DOC_CFG[type].key);
+function docDelete(type, idx){
+  const list = docGetList(type); const rec = list[idx]; if(!rec) return;
+  if(!confirm('¿Borrar "'+rec.name+'"? No se puede deshacer.')) return;
+  list.splice(idx,1);
+  try{ docSaveList(type, list); }catch(e){}
   showToast('PDF eliminado · '+DOC_CFG[type].label);
   docRender(type);
 }
@@ -3550,28 +3722,190 @@ function docRender(type){
   const cfg = DOC_CFG[type];
   const cont = document.getElementById(cfg.viewId);
   if(!cont) return;
-  const rec = docGet(type);
-  if(!rec){
+  const list = docGetList(type);
+  if(!list.length){
     cont.innerHTML = '<div class="mc-card" style="text-align:center;color:var(--text3);padding:30px 20px">Todavía no subiste ningún PDF.</div>';
     return;
   }
-  const sz = rec.size ? (rec.size/1024>=1024 ? (rec.size/1048576).toFixed(1)+' MB' : Math.round(rec.size/1024)+' KB') : '';
-  const fecha = rec.uploadedAt ? new Date(rec.uploadedAt).toLocaleString() : '';
-  cont.innerHTML =
-    '<div class="mc-card">'
-    + '<div class="mc-qt" style="font-size:14px">PDF guardado</div>'
-    + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px">'
-    +   '<span style="font-size:22px">📄</span>'
-    +   '<div style="min-width:0"><div style="font-weight:600;word-break:break-all">'+rec.name.replace(/</g,'&lt;')+'</div>'
-    +   '<div class="mc-note" style="margin:0">'+sz+(fecha?(' · subido '+fecha):'')+'</div></div>'
-    + '</div>'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    +   '<button class="mc-btn" onclick="docOpen(\''+type+'\')" style="padding:8px 14px;font-size:12px">👁 Ver</button>'
-    +   '<button class="mc-btn ghost sm" onclick="docDownload(\''+type+'\')" style="padding:8px 14px;font-size:12px">⬇ Descargar</button>'
-    +   '<button class="mc-btn ghost sm" onclick="docDelete(\''+type+'\')" style="padding:8px 14px;font-size:12px;color:var(--red,#e5484d);border-color:var(--red,#e5484d)">🗑 Borrar</button>'
-    + '</div>'
-    + '<iframe src="'+rec.data+'" style="border:1px solid var(--border);border-radius:var(--radius);width:100%;height:520px;margin-top:14px;background:#fff" title="'+rec.name.replace(/"/g,'')+'"></iframe>'
-    + '</div>';
+  const counter = cfg.max>1 ? '<div class="mc-note" style="margin:0 0 10px">'+list.length+' / '+cfg.max+' archivos</div>' : '';
+  cont.innerHTML = counter + list.map((rec, idx)=>{
+    const sz = rec.size ? (rec.size/1024>=1024 ? (rec.size/1048576).toFixed(1)+' MB' : Math.round(rec.size/1024)+' KB') : '';
+    const fecha = rec.uploadedAt ? new Date(rec.uploadedAt).toLocaleString() : '';
+    return '<div class="mc-card" style="margin-bottom:12px">'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">'
+      +   '<span style="font-size:22px">📄</span>'
+      +   '<div style="min-width:0;flex:1"><div style="font-weight:600;word-break:break-all">'+String(rec.name).replace(/</g,'&lt;')+'</div>'
+      +   '<div class="mc-note" style="margin:0">'+sz+(fecha?(' · subido '+fecha):'')+'</div></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +   '<button class="mc-btn" onclick="docOpen(\''+type+'\','+idx+')" style="padding:8px 14px;font-size:12px">👁 Ver</button>'
+      +   '<button class="mc-btn ghost sm" onclick="docDownload(\''+type+'\','+idx+')" style="padding:8px 14px;font-size:12px">⬇ Descargar</button>'
+      +   '<button class="mc-btn ghost sm" onclick="docDelete(\''+type+'\','+idx+')" style="padding:8px 14px;font-size:12px;color:var(--red,#e5484d);border-color:var(--red,#e5484d)">🗑 Borrar</button>'
+      + '</div>'
+      + '<iframe src="'+rec.data+'" style="border:1px solid var(--border);border-radius:var(--radius);width:100%;height:520px;margin-top:14px;background:#fff" title="'+String(rec.name).replace(/"/g,'')+'"></iframe>'
+      + '</div>';
+  }).join('');
+}
+
+// ===== INVESTIGACIÓN =====
+// Parte manual (hipótesis + notas) persistida; parte automática calculada desde ASR/trades.
+const INV_SETUPS = ['Blue','Red','Pink','White','Black','Green'];
+const FIB_ORDER = ['No llegó a 1','1.0','1.272','1.414','1.618','2.0','2.618'];
+function fibRank(v){ const i = FIB_ORDER.indexOf(v); return i<0 ? -1 : i; }
+
+function invLoad(){
+  try{ return JSON.parse(localStorage.getItem('tj_investigacion')||'{}'); }catch(e){ return {}; }
+}
+function invSave(data){
+  try{ localStorage.setItem('tj_investigacion', JSON.stringify(data)); }catch(e){ alert('No se pudo guardar la investigación (almacenamiento lleno).'); }
+}
+function invState(){
+  const d = invLoad();
+  if(!Array.isArray(d.hyps)) d.hyps = [];
+  if(!Array.isArray(d.obs)) d.obs = [];
+  if(!Array.isArray(d.ideas)) d.ideas = [];
+  return d;
+}
+
+// --- Estadísticas automáticas por setup (usa trades + ASR vinculados) ---
+function invRenderSetupTable(){
+  const tbody = document.querySelector('#inv-setup-tbl tbody');
+  if(!tbody) return;
+  const closedTrades = trades.filter(t=>t.estrategia);
+  const rows = INV_SETUPS.map(setup=>{
+    const ts = closedTrades.filter(t=>t.estrategia===setup);
+    const n = ts.length;
+    const wins = ts.filter(t=>t.resultado==='Win').length;
+    const losses = ts.filter(t=>t.resultado==='Loss').length;
+    const closed = wins+losses;
+    const wr = closed ? Math.round(wins/closed*100) : null;
+    const rrs = ts.map(t=>parseRR(t.rr)).filter(r=>!isNaN(r));
+    const rrAvg = rrs.length ? (rrs.reduce((a,b)=>a+b,0)/rrs.length) : null;
+    // ASR de este setup con extensión cargada
+    const asrSetup = asrs.filter(a=>{ const t=trades.find(x=>x.id===a.tradeId); return t && t.estrategia===setup && a.fib; });
+    const nFib = asrSetup.length;
+    const pct = lvl => nFib ? Math.round(asrSetup.filter(a=>fibRank(a.fib)>=fibRank(lvl)).length / nFib * 100) : null;
+    const p1 = pct('1.0'), p127 = pct('1.272'), p161 = pct('1.618');
+    // mejor variante por WR (entre trades con variante)
+    const varMap = {};
+    ts.forEach(t=>{ if(t.variante){ (varMap[t.variante]=varMap[t.variante]||[]).push(t); } });
+    let bestVar='—', bestWr=-1;
+    Object.keys(varMap).forEach(v=>{
+      const arr=varMap[v]; const w=arr.filter(x=>x.resultado==='Win').length; const c=arr.filter(x=>x.resultado==='Win'||x.resultado==='Loss').length;
+      if(c){ const r=w/c; if(r>bestWr){ bestWr=r; bestVar=v+' ('+Math.round(r*100)+'%)'; } }
+    });
+    const cell = v => v===null ? '<span style="color:var(--text3)">—</span>' : v;
+    const wrCell = wr===null ? '<span style="color:var(--text3)">—</span>' : `<span style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</span>`;
+    return `<tr>
+      <td><span class="badge b-${setup.toLowerCase()}">${setup}</span></td>
+      <td>${n||0}</td><td>${wrCell}</td>
+      <td>${rrAvg===null?'<span style="color:var(--text3)">—</span>':rrAvg.toFixed(2)+'R'}</td>
+      <td>${cell(p1===null?null:p1+'%')}</td>
+      <td>${cell(p127===null?null:p127+'%')}</td>
+      <td>${cell(p161===null?null:p161+'%')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${bestVar}</td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
+}
+
+function invRenderBlue(){
+  const cont = document.getElementById('inv-blue-stats');
+  if(!cont) return;
+  const blueAsr = asrs.filter(a=>{ const t=trades.find(x=>x.id===a.tradeId); return t && t.estrategia==='Blue'; });
+  const grp = (label, arr) => {
+    const withT = arr.map(a=>trades.find(x=>x.id===a.tradeId)).filter(Boolean);
+    const wins = withT.filter(t=>t.resultado==='Win').length;
+    const losses = withT.filter(t=>t.resultado==='Loss').length;
+    const closed = wins+losses;
+    const wr = closed ? Math.round(wins/closed*100) : null;
+    const rrs = withT.map(t=>parseRR(t.rr)).filter(r=>!isNaN(r));
+    const rrAvg = rrs.length ? (rrs.reduce((a,b)=>a+b,0)/rrs.length) : null;
+    return `<div style="flex:1;min-width:150px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px">
+      <div style="font-weight:600;margin-bottom:6px;color:#4f9cf9">${label}</div>
+      <div class="mc-note" style="margin:0">ASR: ${arr.length} · WR: ${wr===null?'—':wr+'%'} · RR medio: ${rrAvg===null?'—':rrAvg.toFixed(2)+'R'}</div>
+    </div>`;
+  };
+  const internas = blueAsr.filter(a=>a.blueInterna);
+  const normales = blueAsr.filter(a=>!a.blueInterna);
+  if(!blueAsr.length){
+    cont.innerHTML = '<p class="mc-note" style="margin:0">Todavía no hay ASR de setups Blue. Marcá "Blue interna" en los ASR correspondientes para comparar.</p>';
+    return;
+  }
+  cont.innerHTML = '<div style="display:flex;gap:12px;flex-wrap:wrap">'+grp('Blue interna',internas)+grp('Blue normal',normales)+'</div>';
+}
+
+// --- Hipótesis (manual) ---
+function invAddHyp(){
+  const d = invState();
+  d.hyps.push({ id:Date.now(), hyp:'', setup:'', mide:'', estado:'Abierta', resultado:'' });
+  invSave(d); invRenderHyps();
+}
+function invUpdHyp(id, field, val){
+  const d = invState();
+  const h = d.hyps.find(x=>x.id===id); if(!h) return;
+  h[field] = val; invSave(d);
+}
+function invDelHyp(id){
+  if(!confirm('¿Eliminar esta hipótesis?')) return;
+  const d = invState(); d.hyps = d.hyps.filter(x=>x.id!==id); invSave(d); invRenderHyps();
+}
+function invRenderHyps(){
+  const tbody = document.querySelector('#inv-hyp-tbl tbody');
+  if(!tbody) return;
+  const d = invState();
+  if(!d.hyps.length){ tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:18px">// Sin hipótesis · usá "+ Hipótesis"</td></tr>'; return; }
+  const setupOpts = ['',...INV_SETUPS,'Otra'];
+  const estados = ['Abierta','En estudio','Validada','Descartada'];
+  const estadoColor = e => e==='Validada'?'var(--green)':e==='Descartada'?'var(--red)':e==='En estudio'?'var(--amber)':'var(--text2)';
+  tbody.innerHTML = d.hyps.map(h=>`<tr>
+    <td><textarea onchange="invUpdHyp(${h.id},'hyp',this.value)" placeholder="Hipótesis…" style="width:100%;min-height:38px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-family:inherit;font-size:12px;resize:vertical">${escapeHtml(h.hyp||'')}</textarea></td>
+    <td><select onchange="invUpdHyp(${h.id},'setup',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px;font-size:12px">${setupOpts.map(s=>`<option value="${s}" ${h.setup===s?'selected':''}>${s||'—'}</option>`).join('')}</select></td>
+    <td><input value="${escapeHtml(h.mide||'')}" onchange="invUpdHyp(${h.id},'mide',this.value)" placeholder="Nº BOS, % TP…" style="width:100%;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px"></td>
+    <td><select onchange="invUpdHyp(${h.id},'estado',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:${estadoColor(h.estado)};padding:5px;font-size:12px;font-weight:600">${estados.map(e=>`<option value="${e}" ${h.estado===e?'selected':''}>${e}</option>`).join('')}</select></td>
+    <td><textarea onchange="invUpdHyp(${h.id},'resultado',this.value)" placeholder="Conclusión…" style="width:100%;min-height:38px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-family:inherit;font-size:12px;resize:vertical">${escapeHtml(h.resultado||'')}</textarea></td>
+    <td><button class="del-btn" onclick="invDelHyp(${h.id})">✕</button></td>
+  </tr>`).join('');
+}
+
+// --- Notas: observaciones e ideas (manual) ---
+function invAddNote(kind){
+  const d = invState();
+  const arr = kind==='obs' ? d.obs : d.ideas;
+  arr.push({ id:Date.now(), text:'' });
+  invSave(d); invRenderNotes(kind);
+}
+function invUpdNote(kind, id, val){
+  const d = invState();
+  const arr = kind==='obs' ? d.obs : d.ideas;
+  const n = arr.find(x=>x.id===id); if(!n) return;
+  n.text = val; invSave(d);
+}
+function invDelNote(kind, id){
+  const d = invState();
+  if(kind==='obs') d.obs = d.obs.filter(x=>x.id!==id);
+  else d.ideas = d.ideas.filter(x=>x.id!==id);
+  invSave(d); invRenderNotes(kind);
+}
+function invRenderNotes(kind){
+  const d = invState();
+  const arr = kind==='obs' ? d.obs : d.ideas;
+  const cont = document.getElementById(kind==='obs'?'inv-obs-list':'inv-idea-list');
+  if(!cont) return;
+  if(!arr.length){ cont.innerHTML = '<p class="mc-note" style="margin:0;color:var(--text3)">// Vacío</p>'; return; }
+  cont.innerHTML = arr.map(n=>`<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px">
+    <span style="color:var(--accent);margin-top:9px">•</span>
+    <textarea onchange="invUpdNote('${kind}',${n.id},this.value)" placeholder="Escribí acá…" style="flex:1;min-height:40px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:8px 10px;font-family:inherit;font-size:13px;resize:vertical">${escapeHtml(n.text||'')}</textarea>
+    <button class="del-btn" style="margin-top:6px" onclick="invDelNote('${kind}',${n.id})">✕</button>
+  </div>`).join('');
+}
+
+function invRender(){
+  invRenderSetupTable();
+  invRenderBlue();
+  invRenderHyps();
+  invRenderNotes('obs');
+  invRenderNotes('idea');
 }
 
 function autoExportJSON(){
@@ -3610,7 +3944,8 @@ function exportData(){
     movements,
     activeAccountId,
     traderName: localStorage.getItem('tj_trader_name') || '',
-    docs: { checklist: docGet('checklist'), plan: docGet('plan') }
+    docs: { checklist: docGetList('checklist'), plan: docGetList('plan') },
+    investigacion: invLoad()
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
@@ -3949,14 +4284,42 @@ function importData(input){
       // Restaurar documentos PDF (check list / trading plan) si vienen en el respaldo
       if(data && data.docs){
         try{
-          if(action==='replace'){
-            if(data.docs.checklist) localStorage.setItem('tj_doc_checklist', JSON.stringify(data.docs.checklist));
-            if(data.docs.plan) localStorage.setItem('tj_doc_plan', JSON.stringify(data.docs.plan));
-          } else {
-            if(data.docs.checklist && !docGet('checklist')) localStorage.setItem('tj_doc_checklist', JSON.stringify(data.docs.checklist));
-            if(data.docs.plan && !docGet('plan')) localStorage.setItem('tj_doc_plan', JSON.stringify(data.docs.plan));
-          }
+          const norm = v => Array.isArray(v) ? v : (v && v.data ? [v] : []); // soporta formato viejo (objeto) y nuevo (array)
+          ['checklist','plan'].forEach(type=>{
+            const incoming = norm(data.docs[type]);
+            if(!incoming.length) return;
+            const cfg = DOC_CFG[type];
+            if(action==='replace'){
+              localStorage.setItem(cfg.key, JSON.stringify(incoming.slice(0, cfg.max)));
+            } else {
+              // merge: sumar a lo actual sin pasar el máximo, sin duplicar por nombre+tamaño
+              const cur = docGetList(type);
+              const seen = new Set(cur.map(r=>r.name+'|'+r.size));
+              const merged = cur.slice();
+              incoming.forEach(r=>{ if(merged.length<cfg.max && !seen.has(r.name+'|'+r.size)){ merged.push(r); seen.add(r.name+'|'+r.size); } });
+              localStorage.setItem(cfg.key, JSON.stringify(merged));
+            }
+          });
           if(typeof docRender==='function'){ docRender('checklist'); docRender('plan'); }
+        }catch(e){}
+      }
+      // Restaurar investigación (hipótesis y notas)
+      if(data && data.investigacion && typeof data.investigacion==='object'){
+        try{
+          const cur = invState();
+          const incoming = data.investigacion;
+          if(action==='replace'){
+            invSave(incoming);
+          } else {
+            // merge sin duplicar por id
+            const merge = (a=[],b=[])=>{ const ids=new Set(a.map(x=>x.id)); return [...a, ...b.filter(x=>!ids.has(x.id))]; };
+            invSave({
+              hyps: merge(cur.hyps, incoming.hyps||[]),
+              obs: merge(cur.obs, incoming.obs||[]),
+              ideas: merge(cur.ideas, incoming.ideas||[])
+            });
+          }
+          if(typeof invRender==='function' && document.getElementById('page-investigacion')?.classList.contains('active')) invRender();
         }catch(e){}
       }
       refreshAccountSelectors();
