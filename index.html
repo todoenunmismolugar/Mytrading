@@ -138,6 +138,7 @@ textarea{resize:vertical;min-height:68px;line-height:1.5}
 .p-loss.on{background:var(--red2);border-color:var(--red);color:var(--red)}
 .p-be.on{background:var(--amber2);border-color:var(--amber);color:var(--amber)}
 .p-open.on{background:var(--accent2);border-color:var(--accent);color:var(--accent)}
+.p-manual.on{background:rgba(168,130,255,.15);border-color:#a882ff;color:#a882ff}
 .p-type.on{background:var(--bg4);border-color:var(--border2);color:var(--text)}
 .p-fib.on,.p-conf.on,.p-patron.on{background:var(--purple2);border-color:var(--purple);color:var(--purple)}
 .p-session.on{background:var(--pink2);border-color:var(--pink);color:var(--pink)}
@@ -654,12 +655,14 @@ select.mc-in{font-family:'Syne',sans-serif;font-weight:600;cursor:pointer}
 
     <div class="rr-cell rr-label">Resultado</div>
     <div class="rr-cell" style="grid-column:span 2">
-      <div class="pills" style="flex-wrap:nowrap">
+      <div class="pills" style="flex-wrap:wrap">
         <div class="pill p-win" onclick="selResult(this,'Win')">TP</div>
         <div class="pill p-loss" onclick="selResult(this,'Loss')">SL</div>
         <div class="pill p-be" onclick="selResult(this,'BE')">BE</div>
         <div class="pill p-open" onclick="selResult(this,'Open')">Abierto</div>
+        <div class="pill p-manual" onclick="selResult(this,'Manual')">✋ Manual</div>
       </div>
+      <textarea id="inp-cierre-motivo" placeholder="Motivo del cierre manual (por qué cerraste antes: gestión, noticia, dudas, parciales, etc.)" style="display:none;width:100%;margin-top:8px;min-height:52px;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;resize:vertical"></textarea>
     </div>
 
     <div class="rr-cell rr-label">Riesgo ($)</div>
@@ -1918,8 +1921,10 @@ function selDir(el, d){
 }
 
 function selResult(el, r){
-  document.querySelectorAll('.p-win,.p-loss,.p-be,.p-open').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.p-win,.p-loss,.p-be,.p-open,.p-manual').forEach(p=>p.classList.remove('on'));
   el.classList.add('on'); curResult = r;
+  const mot=document.getElementById('inp-cierre-motivo');
+  if(mot) mot.style.display = (r==='Manual') ? 'block' : 'none';
   calcRisk();
 }
 
@@ -2375,6 +2380,13 @@ function addTrade(){
     imgNotes: Object.assign({}, curImgNotes),
     notas: document.getElementById('inp-notas').value
   };
+  // Cierre manual: guarda el motivo y cuenta como Win/Loss/BE según el número real de B/P Neto.
+  t.cierreManual = (curResult === 'Manual');
+  t.cierreMotivo = t.cierreManual ? (document.getElementById('inp-cierre-motivo')?.value || '') : '';
+  if(t.cierreManual){
+    const _p = parseFloat(String(t.pnl).replace(',','.').replace('+',''));
+    t.resultado = isNaN(_p) ? 'BE' : (_p>0 ? 'Win' : (_p<0 ? 'Loss' : 'BE'));
+  }
   if(editingId){
     const idx = trades.findIndex(x=>x.id===editingId);
     if(idx>=0) trades[idx] = t;
@@ -2441,10 +2453,12 @@ function editTrade(id){
   else if(curDir==='Short') document.querySelector('.p-short').classList.add('on');
 
   // Resultado
-  curResult = t.resultado || '';
-  document.querySelectorAll('.p-win,.p-loss,.p-be,.p-open').forEach(p=>p.classList.remove('on'));
-  const resultMap = {Win:'.p-win',Loss:'.p-loss',BE:'.p-be',Open:'.p-open'};
+  curResult = t.cierreManual ? 'Manual' : (t.resultado || '');
+  document.querySelectorAll('.p-win,.p-loss,.p-be,.p-open,.p-manual').forEach(p=>p.classList.remove('on'));
+  const resultMap = {Win:'.p-win',Loss:'.p-loss',BE:'.p-be',Open:'.p-open',Manual:'.p-manual'};
   if(resultMap[curResult]) document.querySelector(resultMap[curResult]).classList.add('on');
+  const _motE=document.getElementById('inp-cierre-motivo');
+  if(_motE){ _motE.value = t.cierreMotivo||''; _motE.style.display = t.cierreManual ? 'block':'none'; }
 
   // Patrón
   curPatron = t.patron || '';
@@ -2558,7 +2572,8 @@ function resetForm(){
   ['inp-activo','inp-entrada','inp-sl','inp-tp','inp-salida','inp-sl-tecnico','inp-tp-tecnico','inp-rr','inp-rr-plan','inp-capital','inp-capital-final','inp-riesgo-monto','inp-bp-bruto','inp-comisiones','inp-lotaje','inp-notas','inp-link','inp-fecha-salida','inp-hora','inp-hora-salida','inp-duracion'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
   });
-  document.querySelectorAll('.p-win,.p-loss,.p-be,.p-open').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.p-win,.p-loss,.p-be,.p-open,.p-manual').forEach(p=>p.classList.remove('on'));
+  const _motR=document.getElementById('inp-cierre-motivo'); if(_motR){ _motR.value=''; _motR.style.display='none'; }
   document.querySelectorAll('.p-long,.p-short').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.p-mode,.p-orden,.p-check-ok,.p-check-no,.p-check-nc,.p-check-red').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('#fibPills .pill,.p-conf,#patronPills .pill,#sessionPills .pill,#gestionPills .pill').forEach(p=>p.classList.remove('on'));
@@ -2638,7 +2653,7 @@ function renderTable(){
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)">${t.lotaje||'–'}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-weight:600">${t.rr?t.rr+'R':'–'}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${t.pnl&&t.pnl.startsWith('+')?'var(--green)':(t.pnl&&t.pnl.startsWith('-')?'var(--red)':'var(--text3)')}">${t.pnl||'–'}</td>
-      <td><span class="badge ${resBC[t.resultado]||''}">${t.resultado||'–'}</span></td>
+      <td><span class="badge ${resBC[t.resultado]||''}" ${t.cierreManual?`title="Cierre manual${t.cierreMotivo?': '+t.cierreMotivo.replace(/"/g,'&quot;'):''}"`:''}>${t.resultado||'–'}${t.cierreManual?' ✋':''}</span></td>
       <td style="text-align:center">${asrs.some(a=>a.tradeId===t.id)
         ? '<span title="ASR realizado" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--green2);color:var(--green);border:1px solid var(--green);font-weight:700;font-size:12px">✓</span>'
         : '<span title="Sin ASR" style="color:var(--text3);font-size:14px">–</span>'
@@ -3150,7 +3165,7 @@ function renderCartera(){
         <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)">${t.fecha}${t.hora?' '+t.hora:''}</td>
         <td style="font-weight:600">${t.activo}</td>
         <td><span style="color:${stratColors[t.estrategia]||'var(--text)'};font-weight:600;font-size:11px;font-family:'JetBrains Mono',monospace">${t.estrategia}${t.variante?' '+t.variante:''}</span></td>
-        <td><span class="badge ${resBC[t.resultado]||''}">${t.resultado||'–'}</span></td>
+        <td><span class="badge ${resBC[t.resultado]||''}" ${t.cierreManual?`title="Cierre manual${t.cierreMotivo?': '+t.cierreMotivo.replace(/"/g,'&quot;'):''}"`:''}>${t.resultado||'–'}${t.cierreManual?' ✋':''}</span></td>
         <td style="font-family:'JetBrains Mono',monospace;font-weight:600;color:${pnl>0?'var(--green)':(pnl<0?'var(--red)':'var(--text3)')}">${isNaN(pnl)?'–':((pnl>=0?'+':'')+'$ '+pnl.toFixed(2))}</td>
         <td style="font-family:'JetBrains Mono',monospace;font-size:12px">$ ${info.cap.toFixed(2)}</td>
         <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${deltaPct>0?'var(--green)':(deltaPct<0?'var(--red)':'var(--text3)')}">${deltaPct>=0?'+':''}${deltaPct.toFixed(2)} %</td>
